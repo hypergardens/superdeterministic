@@ -1,0 +1,40 @@
+- display interface
+- buy item
+- keyboard shortcuts
+- state -> branch -> state
+- attack + ui update
+- run record
+- sequence of 1 shop, 3 mobs
+- add a condition to every action
+- filter actions to possible
+- record states as series of actions
+- visualise branches
+- clearer run keys
+- adding all the content from the base game
+- heuristic score for exploring-first
+- node version of the game
+- change takeActionByNumber
+- new architecture: gamestate as parameter, independent functions
+- separate action from game state
+- chunk-based exploration, store fringe
+- centralised storage
+- hashing storage
+
+----
+
+- turn counter based records
+- rss increasing, maybe store in file? check file?
+- ensure the dupe elimination works - why 14% collision on turn off vs 99.9% on on, are they truly unique
+- store only transitions
+- actions centralised, visibleCondition vs activateCondition
+- recording & undo key
+- a few hinted runs
+- wavefunction collapse - solvable levels vs full maps
+- enemy name and emoji
+- get rid of populateArea
+- gradually running a run
+- single-place population of zones in code
+- merging branches, multiple parents and children
+
+## warn
+main > generateActions, odd condition for no actions
