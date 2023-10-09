@@ -19,22 +19,23 @@
 - chunk-based exploration, store fringe
 - centralised storage
 - hashing storage
+- turn counter based records
 
 ----
 
-- turn counter based records
+- a few hinted runs
+- disable priority queue, profile time/space
+- enemy name and emoji
+- UI
+- recording & undo key
+- gradually running a run
+- single place for monsters, actions and shops?
+
 - rss increasing, maybe store in file? check file?
 - ensure the dupe elimination works - why 14% collision on turn off vs 99.9% on on, are they truly unique
 - store only transitions
-- actions centralised, visibleCondition vs activateCondition
-- recording & undo key
-- a few hinted runs
-- wavefunction collapse - solvable levels vs full maps
-- enemy name and emoji
-- get rid of populateArea
-- gradually running a run
-- single-place population of zones in code
 - merging branches, multiple parents and children
+- wavefunction collapse - solvable levels vs full maps
 
 ## warn
 main > generateActions, odd condition for no actions

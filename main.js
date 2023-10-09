@@ -12,7 +12,8 @@ let manualMode = false;
 function scoreState(state) {
   // play around, make your own scores!
 
-  return -state.zone;
+  // return -state.zone;
+  return -state.numberPath.length;
   // return state.gold;
   // return state.player.defense * state.player.damage;
 
@@ -24,8 +25,8 @@ function scoreState(state) {
 }
 
 function customHash(gameState) {
-  return hash(gameState);
-  // return JSON.stringify(gameState);
+  // return hash(gameState);
+  return JSON.stringify(gameState);
   // return "test";
 }
 
@@ -203,37 +204,48 @@ function autoRun(numberPath) {
 /////////////////////////////////////////////////////// async explore
 function linearExploreAll() {
 
-  let allExplored = () => unexploredStates.length === 0;
   let explored = 0;
   let step = 1;
   let writeStep = 100000;
   let targetZone = 1;
+  let targetTurn = 1;
   let zoneReached = () => unexploredStates[0].value.zone;
+  let currentTurn = () => unexploredStates[0].value.numberPath.length;
+
+  let turnRecords = {};
   // while (explored < 10000) {
+
+  // this is a function that sees if there's any explored states, whenever called()
+  let allExplored = () => unexploredStates.length === 0;
+
   while (!allExplored()) {
-    while (zoneReached() < targetZone) {
+    // explore shit
+    while (currentTurn() < targetTurn) {
 
       exploreNStates(step);
       explored += step;
       // Check your custom condition here
-      if (explored % 10000 === 0 || allExplored() || zoneReached() >= targetZone) {
-
-        console.log("-----------------------------------");
-        console.log(`Zone explored: ${zoneReached() - 1}`);
-        console.log(`${explored} explored, ${unexploredStates.length} unexplored states.` +
-          `Won: ${runStats.won}, Dead: ${runStats.dead}`);
-        console.log(`duplicates: ${runStats.dupeHashes}, uniqueHashes: ${runStats.uniqueHashes}, collision%: ${runStats.dupeHashes / (runStats.uniqueHashes + runStats.dupeHashes) * 100}`);
+      if (explored % 10000 === 0 || allExplored() || currentTurn() >= targetTurn) {
 
       }
 
       // if (explored % writeStep === 0 || allExplored) {
       // }
     }
-    // console.log(`${(process.memoryUsage().rss / 1000000).toFixed(2)} MB rss`);
-    // console.log(`${(process.memoryUsage().heapUsed / 1000000).toFixed(2)} MB heapUsed`);
-    // console.log(`${(process.memoryUsage().heapTotal / 1000000).toFixed(2)} MB heapTotal`);
     // zone explored
-    fs.writeFileSync(`./exploredHASH ${zoneReached() - 1}.json`, JSON.stringify(hashRecord));
+    // fs.writeFileSync(`./exploredHASH ${currentTurn() - 1}.json`, JSON.stringify(hashRecord));
+
+    console.log("-----------------------------------");
+    console.log(`${(process.memoryUsage().rss / 1000000).toFixed(2)} MB rss`);
+    console.log(`${(process.memoryUsage().heapUsed / 1000000).toFixed(2)} MB heapUsed`);
+    console.log(`${(process.memoryUsage().heapTotal / 1000000).toFixed(2)} MB heapTotal`);
+    console.log(`Turn: ${currentTurn() - 1}`);
+    console.log(`${explored} explored, ${unexploredStates.length} unexplored states.` +
+      `Won: ${runStats.won}, Dead: ${runStats.dead}`);
+    console.log(`duplicates: ${runStats.dupeHashes}, uniqueHashes: ${runStats.uniqueHashes}, collision%: ${runStats.dupeHashes / (runStats.uniqueHashes + runStats.dupeHashes) * 100}`);
+    turnRecords[currentTurn()] = explored;
+
+    fs.writeFileSync(`./turnRecords.json`, JSON.stringify(turnRecords));
     hashRecord = {};
     runStats.uniqueHashes = 0;
     runStats.dupeHashes = 0;
@@ -241,7 +253,7 @@ function linearExploreAll() {
     runStats.dead = 0;
 
     if (!allExplored()) {
-      targetZone += 1;
+      targetTurn += 1;
     }
   }
 }
