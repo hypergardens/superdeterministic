@@ -146,12 +146,10 @@ let pregenActions = {
 };
 
 function generateActions(gameState) {
-  if (gameState.player.hp <= 0 /* || gameState.zone > lastZone */) {
+  if (gameState.dead || gameState.won /* || gameState.zone > lastZone */) {
     return pregenActions["dead"];
   } else if (gameState.zone === lastZone) {
     return pregenActions["win"];
-  } else if (gameState.zone >= lastZone) {
-    return [];
   } else if (gameState.zone % 4 === 0) {
     // return shop actions
     return pregenActions[gameState.zone];

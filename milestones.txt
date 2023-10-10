@@ -20,10 +20,13 @@
 - centralised storage
 - hashing storage
 - turn counter based records
+- profiler says shiftUnexplored take most time. optimise it.
 
 ----
 
-- profiler says shiftUnexplored take most time. optimise it.
+- won and dead are redundant, using both last zone and hp and such
+- remove conditions from action execution
+- takeActionByNumber is bloated
 - store states every X states, store others as calculations of previous wave
 - problem: priority mode is odd to switch to and it has much faster calculations
 - problem: large hash records slow down processing time
