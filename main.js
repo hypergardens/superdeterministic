@@ -250,14 +250,6 @@ function shiftUnexploredStates() {
     priorityUnexploredStates.shift();
   } else {
     // flatUnexploredStates = flatUnexploredStates.slice(1);
-
-    unexploredIdx += 1;
-    if (unexploredIdx >= 1000) {
-      flatUnexploredStates.splice(0, unexploredIdx);
-      unexploredIdx = 0;
-    }
-
-
     // flatUnexploredStates.shift();
   }
 }
@@ -267,81 +259,87 @@ function zoneReached() { return getNextUnexploredState().zone; }
 function currentTurn() { return gameState.numberPath.length; }
 function upcomingTurn() { return getNextUnexploredState().numberPath.length; }
 function allExplored() { return getRemainingUnexploredStates() === 0; }
-// function linearExploreAll() {
 
-let explored = 0;
-let totalExplored = 0;
-let step = 1;
-let writeStep = 100000;
-let targetZone = 1;
-let limitedTargetTurn = 200;
-let targetTurn = 1;
+function linearExploreAll() {
+  let explored = 0;
+  let totalExplored = 0;
+  let step = 1;
+  let writeStep = 100000;
+  let targetZone = 1;
+  let limitedTargetTurn = 200;
+  let targetTurn = 1;
 
-let turnRecords = {};
-// while (explored < 10000) {
+  let turnRecords = {};
+  // while (explored < 10000) {
 
 
-while (!allExplored()) {
-  // explore shit
-  console.time("Duration");
-  let startTime = process.hrtime();
-  while (upcomingTurn() < targetTurn) {
+  while (!allExplored()) {
+    // explore shit
+    console.time("Duration");
+    let startTime = process.hrtime();
+    while (upcomingTurn() < targetTurn) {
 
-    // exploreNStates(step);
-    // explored += step;
+      // exploreNStates(step);
+      // explored += step;
 
-    gameState = getNextUnexploredState();
+      gameState = getNextUnexploredState();
 
-    shiftUnexploredStates();
-    exploreState(gameState, hashRecord, runStats, flatUnexploredStates);
-    explored += 1;
+      unexploredIdx += 1;
+      if (unexploredIdx >= 10000) {
+        flatUnexploredStates.splice(0, unexploredIdx);
+        unexploredIdx = 0;
+      }
 
-  }
-  // zone explored
-  // fs.writeFileSync(`./exploredHASH.json`, JSON.stringify(hashRecord));
-  // fs.writeFileSync(`./exploredHASH ${upcomingTurn() - 1}.json`, JSON.stringify(hashRecord));
+      exploreState(gameState, hashRecord, runStats, flatUnexploredStates);
+      explored += 1;
 
-  totalExplored += explored;
+    }
+    // zone explored
+    // fs.writeFileSync(`./exploredHASH.json`, JSON.stringify(hashRecord));
+    // fs.writeFileSync(`./exploredHASH ${upcomingTurn() - 1}.json`, JSON.stringify(hashRecord));
 
-  let endTime = process.hrtime(startTime);
-  let millis = (endTime[0] * 1e3 + endTime[1] / 1e6);
-  console.log("-----------------------------------");
-  console.log(displayState(gameState));
-  console.timeEnd("Duration");
-  console.log(`Turn: ${currentTurn()}, time ${millis.toFixed(0)}, states ${explored}`);
-  console.log(`States/second: ${explored / millis * 1000}`);
-  console.log(`${(process.memoryUsage().rss / 1000000).toFixed(2)} MB rss`);
-  // console.log(`${(process.memoryUsage().heapUsed / 1000000).toFixed(2)} MB heapUsed`);
-  // console.log(`${(process.memoryUsage().heapTotal / 1000000).toFixed(2)} MB heapTotal`);
-  console.log(`${totalExplored} explored, ${getRemainingUnexploredStates()} unexplored states.` +
-    `Won: ${runStats.won}, Dead: ${runStats.dead}`);
-  console.log(`duplicates: ${runStats.dupeHashes}, uniqueHashes: ${runStats.uniqueHashes}, collision%: ${runStats.dupeHashes / (runStats.uniqueHashes + runStats.dupeHashes) * 100}`);
-  turnRecords[currentTurn()] = {
-    explored, speed: (explored / millis * 1000).toFixed(1), totalTime: millis / 1000
-  };
+    totalExplored += explored;
 
-  console.log(`Size: ${JSON.stringify(flatUnexploredStates).length}`);
-  fs.writeFileSync(`./turnRecords.json`, JSON.stringify(turnRecords));
-  // delete hashRecord;
-  hashRecord = {};
-  // runStats.uniqueHashes = 0;
-  // runStats.dupeHashes = 0;
-  explored = 0;
-  runStats.dead = 0;
+    let endTime = process.hrtime(startTime);
+    let millis = (endTime[0] * 1e3 + endTime[1] / 1e6);
+    console.log("-----------------------------------");
+    console.log(displayState(gameState));
+    console.timeEnd("Duration");
+    console.log(`Turn: ${currentTurn()}, time ${millis.toFixed(0)}, states ${explored}`);
+    console.log(`States/second: ${explored / millis * 1000}`);
+    console.log(`${(process.memoryUsage().rss / 1000000).toFixed(2)} MB rss`);
+    // console.log(`${(process.memoryUsage().heapUsed / 1000000).toFixed(2)} MB heapUsed`);
+    // console.log(`${(process.memoryUsage().heapTotal / 1000000).toFixed(2)} MB heapTotal`);
+    console.log(`${totalExplored} explored, ${getRemainingUnexploredStates()} unexplored states.` +
+      `Won: ${runStats.won}, Dead: ${runStats.dead}`);
+    console.log(`duplicates: ${runStats.dupeHashes}, uniqueHashes: ${runStats.uniqueHashes}, collision%: ${runStats.dupeHashes / (runStats.uniqueHashes + runStats.dupeHashes) * 100}`);
+    turnRecords[currentTurn()] = {
+      explored, speed: (explored / millis * 1000).toFixed(1), totalTime: millis / 1000
+    };
 
-  if (!allExplored()) {
-    targetTurn += 1;
-  }
+    // console.log(`Size: ${JSON.stringify(flatUnexploredStates).length}`);
+    console.log(`Len: ${(flatUnexploredStates).length}`);
+    fs.writeFileSync(`./turnRecords.json`, JSON.stringify(turnRecords));
+    // delete hashRecord;
+    hashRecord = {};
+    // runStats.uniqueHashes = 0;
+    // runStats.dupeHashes = 0;
+    explored = 0;
+    runStats.dead = 0;
 
-  if (upcomingTurn() > limitedTargetTurn) {
-    break;
+    if (!allExplored()) {
+      targetTurn += 1;
+    }
+
+    if (upcomingTurn() > limitedTargetTurn) {
+      break;
+    }
   }
 }
-// }
 
-// console.time("Exploration");
-// linearExploreAll();
-// console.timeEnd("Exploration");
+console.time("Exploration");
+linearExploreAll();
+console.timeEnd("Exploration");
 
 function exploreNStates(number) {
   for (let i = 0; i < number; i++) {
