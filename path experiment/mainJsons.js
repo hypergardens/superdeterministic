@@ -1,8 +1,8 @@
 const fs = require('fs');
 
-const { insertIntoPriorityQueue } = require("./library");
-const { generateActions } = require("./generateActions");
-const { lastZone } = require("./gameData");
+const { insertIntoPriorityQueue } = require("../library");
+const { generateActions } = require("../generateActions");
+const { lastZone } = require("../gameData");
 // var hash = require('object-hash');
 
 let manualMode = false;
@@ -94,7 +94,7 @@ function displayState(gameState) {
 // };
 let priorityMode = false;
 let priorityUnexploredStates = [{ value: gameState, priority: scoreState(gameState) }];
-let flatUnexploredStates = [gameState];
+let flatUnexploredStates = [JSON.stringify(gameState)];
 let unexploredIdx = 0;
 
 function takeAction(gameState, action, idx) {
@@ -217,7 +217,7 @@ function exploreState(gameState, hashRecord, runStats, flatUnexploredStates) {
     prioritisedChildren.forEach(child => insertIntoPriorityQueue(priorityUnexploredStates, child));
   } else {
     // TODO: optimise concat?
-    flatUnexploredStates.push(...childStates);
+    flatUnexploredStates.push(...childStates.map(elem => JSON.stringify(elem)));
   }
 }
 
@@ -234,7 +234,7 @@ function getNextUnexploredState() {
   if (priorityMode) {
     return priorityUnexploredStates[0].value;
   } else {
-    return flatUnexploredStates[unexploredIdx];
+    return JSON.parse(flatUnexploredStates[unexploredIdx]);
   }
 }
 function getRemainingUnexploredStates() {
@@ -299,7 +299,7 @@ function linearExploreAll() {
   let step = 1;
   let writeStep = 100000;
   let targetZone = 1;
-  let limitedTargetTurn = 250;
+  let limitedTargetTurn = 200;
   let targetTurn = 1;
 
   let turnRecords = {};
@@ -318,24 +318,9 @@ function linearExploreAll() {
       gameState = getNextUnexploredState();
 
       unexploredIdx += 1;
-      if (unexploredIdx >= 1000) {
+      if (unexploredIdx >= 10000) {
         flatUnexploredStates.splice(0, unexploredIdx);
         unexploredIdx = 0;
-        // flatUnexploredStates.sort((a) => (a.zone));
-        // flatUnexploredStates.sort((a, b) => (a.zone - b.zone));
-        // console.log(`Zone of first element:`, getNextUnexploredState().zone);
-
-        // let bucketAnalysis = {};
-        // for (let state of flatUnexploredStates.slice(unexploredIdx)) {
-        //   let bucket = state.zone;
-        //   if (!bucketAnalysis[bucket]) {
-        //     bucketAnalysis[bucket] = 1;
-        //   } else {
-        //     bucketAnalysis[bucket] += 1;
-        //   }
-        // }
-
-        // console.log(bucketAnalysis);
       }
 
       exploreState(gameState, hashRecord, runStats, flatUnexploredStates);
@@ -355,7 +340,7 @@ function linearExploreAll() {
     console.timeEnd("Duration");
     console.log(`Turn: ${currentTurn()}, time ${millis.toFixed(0)}, states ${explored}`);
     console.log(`States/second: ${explored / millis * 1000}`);
-    // console.log(`${(process.memoryUsage().rss / 1000000).toFixed(2)} MB rss`);
+    console.log(`${(process.memoryUsage().rss / 1000000).toFixed(2)} MB rss`);
     // console.log(`${(process.memoryUsage().heapUsed / 1000000).toFixed(2)} MB heapUsed`);
     // console.log(`${(process.memoryUsage().heapTotal / 1000000).toFixed(2)} MB heapTotal`);
     console.log(`${totalExplored} explored, ${getRemainingUnexploredStates()} unexplored states.` +
@@ -365,20 +350,17 @@ function linearExploreAll() {
       explored, speed: (explored / millis * 1000).toFixed(1), totalTime: millis / 1000
     };
 
+
     // console.log(`RSize: ${roughSizeOfObject(flatUnexploredStates)}`);
     // console.log(`JSize: ${JSON.stringify(flatUnexploredStates).length}`);
     // console.log(`Len: ${(flatUnexploredStates).length}`);
     fs.writeFileSync(`./turnRecords.json`, JSON.stringify(turnRecords));
     // delete hashRecord;
     // hashRecord = {};
-
-    // display zone distributions:
-    // let zoneAnalysed = 0;
-
     // runStats.uniqueHashes = 0;
     // runStats.dupeHashes = 0;
-    // explored = 0;
-    // runStats.dead = 0;
+    explored = 0;
+    runStats.dead = 0;
 
     if (!allExplored()) {
       targetTurn += 1;

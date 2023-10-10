@@ -1,0 +1,37 @@
+paths to 50
+-----------------------------------
+Duration: 1.638s
+Turn: 50, time 1638, states 178987
+States/second: 109290.82688983378
+407.36 MB rss
+1278513 explored, 210085 unexplored states.Won: 0, Dead: 3
+duplicates: 349172, uniqueHashes: 929341, collision%: 27.310789956770094
+Size: 21831815
+Len: 210085
+Exploration: 16.118s
+
+json to 50
+-----------------------------------
+💀 Zone 17, 4 🗡️, 3 🛡️, 3/25 ❤️, 67 🪙
+Duration: 28.996ms
+Turn: 50, time 29, states 947
+States/second: 32928.732972593905
+56.45 MB rss
+5602 explored, 6550 unexplored states.Won: 0, Dead: 12
+duplicates: 950, uniqueHashes: 4652, collision%: 16.958229203855765
+RSize: 5141654
+JSize: 3052218
+Exploration: 649.817ms
+
+children to 50
+-----------------------------------
+💀 Zone 17, 4 🗡️, 3 🛡️, 3/25 ❤️, 67 🪙
+Duration: 8.669ms
+Turn: 50, time 8, states 947
+States/second: 111468.5874575828
+64.42 MB rss
+5602 explored, 6550 unexplored states.Won: 0, Dead: 12
+duplicates: 950, uniqueHashes: 4652, collision%: 16.958229203855765
+RSize: 3231602
+JSize: 2577378
+Exploration: 2.864s

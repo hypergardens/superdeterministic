@@ -1,8 +1,8 @@
 const fs = require('fs');
 
-const { insertIntoPriorityQueue } = require("./library");
-const { generateActions } = require("./generateActions");
-const { lastZone } = require("./gameData");
+const { insertIntoPriorityQueue } = require("../library");
+const { generateActions } = require("../generateActions");
+const { lastZone } = require("../gameData");
 // var hash = require('object-hash');
 
 let manualMode = false;
@@ -36,7 +36,7 @@ console.log("hello world");
 
 // there's always friction at first
 // nekromantik design
-let gameState = {
+let baseState = {
   numberPath: [],
   actionPath: [],
   codePath: [],
@@ -56,6 +56,9 @@ let gameState = {
   // enemy
   enemy: {},
 };
+
+
+let gameState = cloneState(baseState, true);
 
 let hashRecord = {};
 let runStats = {
@@ -94,17 +97,13 @@ function displayState(gameState) {
 // };
 let priorityMode = false;
 let priorityUnexploredStates = [{ value: gameState, priority: scoreState(gameState) }];
-let flatUnexploredStates = [gameState];
+let flatUnexploredStates = [[]];
 let unexploredIdx = 0;
 
 function takeAction(gameState, action, idx) {
   if (action.condition(gameState)) {
     // console.log(`action taken: ${idx} ${action.name}`);
     gameState.numberPath.push(idx);
-    // ignore attacks on action path
-    // if (action.name !== "Attack") {
-    // gameState.actionPath.push(action.name);
-    // }
     // mark code path for visualisation
     if (action.code) {
       gameState.codePath.push(action.code);
@@ -133,12 +132,11 @@ function tagRun(gameState) {
 }
 
 
-function getChildStates(gameState) {
-
+function getChildPaths(gameState) {
   // get possible actions
   let visibleActions = generateActions(gameState);
   // console.log(visibleActions);
-  let childStates = [];
+  let childPaths = [];
   // if (zone === lastZone) {
   //   console.log("last zone");
   // }
@@ -146,29 +144,48 @@ function getChildStates(gameState) {
   for (let action of possibleActions) {
     // consider the action
     let idx = visibleActions.indexOf(action);
-    // clone the state
-    let childState = cloneState(gameState);
-    // execute new action
-    // childState.numberPath.push(idx);
-    // action.execute(childState);
-    takeAction(childState, action, idx);
-    // add to children
-
-    // let hash = customHash(childState);
-    // if (hashRecord[hash]) {
-    //   // duplicate child
-    // } else {
-    // }
-    childStates.push(childState);
+    childPaths.push(gameState.numberPath.concat(idx));
   };
-  return childStates;
+  return childPaths;
 }
+
+function runPath(gameState, path) {
+  for (const idx of path) {
+    let action = generateActions(gameState)[idx];
+    takeAction(gameState, action, idx);
+  }
+  return gameState;
+}
+
+// function getChildStates(gameState) {
+
+//   // get possible actions
+//   let visibleActions = generateActions(gameState);
+//   // console.log(visibleActions);
+//   let childStates = [];
+//   // if (zone === lastZone) {
+//   //   console.log("last zone");
+//   // }
+//   let possibleActions = visibleActions.filter(action => action.condition(gameState));
+//   for (let action of possibleActions) {
+//     // consider the action
+//     let idx = visibleActions.indexOf(action);
+//     // clone the state
+//     let childState = cloneState(gameState);
+//     // execute new action
+//     // childState.numberPath.push(idx);
+//     // action.execute(childState);
+//     takeAction(childState, action, idx);
+//     // add to children
+//     childStates.push(childState);
+//   };
+//   return childStates;
+// }
 function exploreState(gameState, hashRecord, runStats, flatUnexploredStates) {
   // mark this state as explored
   // let path = gameState.numberPath.toString();
   // let storedState = cloneState(gameState, true);
   // exploredStates[path] = storedState;
-
 
   let minClone = cloneState(gameState, false);
   // mark with hash
@@ -209,15 +226,15 @@ function exploreState(gameState, hashRecord, runStats, flatUnexploredStates) {
     // insertIntoPriorityQueue(allRuns, { value: cloneState(gameState), priority: scoreState(gameState), won: gameState.won });
   }
 
-  let childStates = getChildStates(gameState);
+  let childPaths = getChildPaths(gameState);
   if (priorityMode) {
 
     // add child by score
-    let prioritisedChildren = childStates.map(state => ({ value: state, priority: scoreState(state) }));
+    let prioritisedChildren = childPaths.map(state => ({ value: state, priority: scoreState(state) }));
     prioritisedChildren.forEach(child => insertIntoPriorityQueue(priorityUnexploredStates, child));
   } else {
     // TODO: optimise concat?
-    flatUnexploredStates.push(...childStates);
+    flatUnexploredStates.push(...childPaths);
   }
 }
 
@@ -230,7 +247,7 @@ function autoRun(numberPath) {
   }
 }
 
-function getNextUnexploredState() {
+function getNextUnexploredPath() {
   if (priorityMode) {
     return priorityUnexploredStates[0].value;
   } else {
@@ -255,43 +272,9 @@ function shiftUnexploredStates() {
 }
 /////////////////////////////////////////////////////// async explore
 
-function zoneReached() { return getNextUnexploredState().zone; }
 function currentTurn() { return gameState.numberPath.length; }
-function upcomingTurn() { return getNextUnexploredState().numberPath.length; }
+function upcomingTurn() { return getNextUnexploredPath().length; }
 function allExplored() { return getRemainingUnexploredStates() === 0; }
-
-function roughSizeOfObject(object) {
-
-  var objectList = [];
-  var stack = [object];
-  var bytes = 0;
-
-  while (stack.length) {
-    var value = stack.pop();
-
-    if (typeof value === 'boolean') {
-      bytes += 4;
-    }
-    else if (typeof value === 'string') {
-      bytes += value.length * 2;
-    }
-    else if (typeof value === 'number') {
-      bytes += 8;
-    }
-    else if
-      (
-      typeof value === 'object'
-      && objectList.indexOf(value) === -1
-    ) {
-      objectList.push(value);
-
-      for (var i in value) {
-        stack.push(value[i]);
-      }
-    }
-  }
-  return bytes;
-}
 
 function linearExploreAll() {
   let explored = 0;
@@ -299,7 +282,7 @@ function linearExploreAll() {
   let step = 1;
   let writeStep = 100000;
   let targetZone = 1;
-  let limitedTargetTurn = 250;
+  let limitedTargetTurn = 50;
   let targetTurn = 1;
 
   let turnRecords = {};
@@ -315,27 +298,13 @@ function linearExploreAll() {
       // exploreNStates(step);
       // explored += step;
 
-      gameState = getNextUnexploredState();
+      let path = getNextUnexploredPath();
 
+      gameState = runPath(cloneState(baseState), path);
       unexploredIdx += 1;
-      if (unexploredIdx >= 1000) {
+      if (unexploredIdx >= 10000) {
         flatUnexploredStates.splice(0, unexploredIdx);
         unexploredIdx = 0;
-        // flatUnexploredStates.sort((a) => (a.zone));
-        // flatUnexploredStates.sort((a, b) => (a.zone - b.zone));
-        // console.log(`Zone of first element:`, getNextUnexploredState().zone);
-
-        // let bucketAnalysis = {};
-        // for (let state of flatUnexploredStates.slice(unexploredIdx)) {
-        //   let bucket = state.zone;
-        //   if (!bucketAnalysis[bucket]) {
-        //     bucketAnalysis[bucket] = 1;
-        //   } else {
-        //     bucketAnalysis[bucket] += 1;
-        //   }
-        // }
-
-        // console.log(bucketAnalysis);
       }
 
       exploreState(gameState, hashRecord, runStats, flatUnexploredStates);
@@ -351,11 +320,11 @@ function linearExploreAll() {
     let endTime = process.hrtime(startTime);
     let millis = (endTime[0] * 1e3 + endTime[1] / 1e6);
     console.log("-----------------------------------");
-    console.log(displayState(gameState));
+    // console.log(displayState(gameState));
     console.timeEnd("Duration");
     console.log(`Turn: ${currentTurn()}, time ${millis.toFixed(0)}, states ${explored}`);
     console.log(`States/second: ${explored / millis * 1000}`);
-    // console.log(`${(process.memoryUsage().rss / 1000000).toFixed(2)} MB rss`);
+    console.log(`${(process.memoryUsage().rss / 1000000).toFixed(2)} MB rss`);
     // console.log(`${(process.memoryUsage().heapUsed / 1000000).toFixed(2)} MB heapUsed`);
     // console.log(`${(process.memoryUsage().heapTotal / 1000000).toFixed(2)} MB heapTotal`);
     console.log(`${totalExplored} explored, ${getRemainingUnexploredStates()} unexplored states.` +
@@ -365,20 +334,15 @@ function linearExploreAll() {
       explored, speed: (explored / millis * 1000).toFixed(1), totalTime: millis / 1000
     };
 
-    // console.log(`RSize: ${roughSizeOfObject(flatUnexploredStates)}`);
-    // console.log(`JSize: ${JSON.stringify(flatUnexploredStates).length}`);
-    // console.log(`Len: ${(flatUnexploredStates).length}`);
+    console.log(`Size: ${JSON.stringify(flatUnexploredStates).length}`);
+    console.log(`Len: ${(flatUnexploredStates).length}`);
     fs.writeFileSync(`./turnRecords.json`, JSON.stringify(turnRecords));
     // delete hashRecord;
-    // hashRecord = {};
-
-    // display zone distributions:
-    // let zoneAnalysed = 0;
-
+    hashRecord = {};
     // runStats.uniqueHashes = 0;
     // runStats.dupeHashes = 0;
-    // explored = 0;
-    // runStats.dead = 0;
+    explored = 0;
+    runStats.dead = 0;
 
     if (!allExplored()) {
       targetTurn += 1;
@@ -394,16 +358,9 @@ console.time("Exploration");
 linearExploreAll();
 console.timeEnd("Exploration");
 
-function exploreNStates(number) {
-  for (let i = 0; i < number; i++) {
-    if (getRemainingUnexploredStates() > 0) {
-      gameState = getNextUnexploredState();
-      shiftUnexploredStates();
-      exploreState(gameState);
-    }
-  }
-}
 
 
 // best run
-// autoRun([0, 3, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 1, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 2, 4, 0, 0, 0, 0, 0, 0, 0, 2, 4, 0, 0, 0, 0, 0, 0, 2, 3, 4, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 4, 0, 0, 0, 0, 0, 0, 1, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 2, 3, 3, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);;
+// runPath(gameState, [0, 3, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 1, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 2, 4, 0, 0, 0, 0, 0, 0, 0, 2, 4, 0, 0, 0, 0, 0, 0, 2, 3, 4, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 4, 0, 0, 0, 0, 0, 0, 1, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 2, 3, 3, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+// console.log(tagRun(gameState));

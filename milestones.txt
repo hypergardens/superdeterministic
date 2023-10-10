@@ -24,6 +24,7 @@
 
 ----
 
+- bucket based exploration, store elements by zone and turn
 - won and dead are redundant, using both last zone and hp and such
 - remove conditions from action execution
 - takeActionByNumber is bloated
