@@ -1,6 +1,6 @@
-let { monsters } = require("./monsters");
+const { monsters } = require("./monsters");
 
-let lastZone = Math.max(...Object.keys(monsters).map(key => Number(key))) + 1;
+const lastZone = Math.max(...Object.keys(monsters).map(key => Number(key))) + 1;
 
 module.exports = {
   lastZone

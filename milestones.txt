@@ -23,6 +23,12 @@
 
 ----
 
+- profiler says shiftUnexplored take most time. optimise it.
+- store states every X states, store others as calculations of previous wave
+- problem: priority mode is odd to switch to and it has much faster calculations
+- problem: large hash records slow down processing time
+- idea: store sequence of actions to reach a state, recalculate states instead of storing
+- bucketed priority queue: {10: [1, 2, 3], 5:[5, 4]}, [[10, 3], [5, 2]]
 - a few hinted runs
 - disable priority queue, profile time/space
 - enemy name and emoji
