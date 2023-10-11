@@ -4,7 +4,7 @@ let { actions } = require("./actions");
 
 let pregenActions = {
   "attack": [actions.attack()],
-  "dead": [actions.beDead()],
+  "dead": [],
   "win": [actions.win()],
   // if debug zone
   "debug": [

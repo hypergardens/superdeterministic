@@ -1,2 +1,2 @@
 rm *HASH*.json
-node --inspect --max-old-space-size=4000 main.js
+node --max-old-space-size=4096 main.js

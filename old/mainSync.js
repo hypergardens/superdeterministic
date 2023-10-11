@@ -1,10 +1,13 @@
 const fs = require('fs');
 
-const { insertIntoPriorityQueue } = require("./library");
-const { generateActions } = require("./generateActions");
-const { lastZone } = require("./gameData");
-const { FlatSearchPool } = require('./searchPool');
+const { insertIntoPriorityQueue } = require("../library");
+const { generateActions } = require("../generateActions");
+const { lastZone } = require("../gameData");
+const { FlatSearchPool } = require('../searchPool');
 // var hash = require('object-hash');
+
+let manualMode = false;
+// when not in manual mode, press 7, 8 and 9 to simulate more states
 
 function scoreState(state) {
   // play around, make your own scores!
@@ -122,7 +125,7 @@ function takeActionByNumber(gameState, actions, idx) {
 
 
 function tagRun(gameState) {
-  return "\n " + (gameState.won ? "👑" : (gameState.dead ? "💀" : "?")) + gameState.codePath.join("") + ` Zone ${gameState.zone}, ${gameState.player.damage} 🗡️, ${gameState.player.defense} 🛡️, ${gameState.player.hp}/${gameState.player.maxHp} ❤️, ${gameState.player.gold} 🪙`;
+  return "\n " + (gameState.won ? "👑" : "💀") + gameState.codePath.join("") + ` Zone ${gameState.zone}, ${gameState.player.damage} 🗡️, ${gameState.player.defense} 🛡️, ${gameState.player.hp}/${gameState.player.maxHp} ❤️, ${gameState.player.gold} 🪙`;
 }
 
 
@@ -162,21 +165,6 @@ function exploreState(gameState, hashRecord, runStats, searchPool) {
   // let storedState = cloneState(gameState, true);
   // exploredStates[path] = storedState;
 
-  // record runs
-  if (gameState.won || gameState.dead) {
-
-    // exploredStatesMin[gameState.numberPath.join("")] = minClone;
-    if (gameState.won) {
-      runStats.won += 1;
-    }
-    if (gameState.dead) {
-      runStats.dead += 1;
-    }
-    // TODO: decide where this should go, abort exploring dead/won states
-    return;
-    // god damn you
-    // insertIntoPriorityQueue(allRuns, { value: cloneState(gameState), priority: scoreState(gameState), won: gameState.won });
-  }
 
   let minClone = cloneState(gameState, false);
   // mark with hash
@@ -203,6 +191,19 @@ function exploreState(gameState, hashRecord, runStats, searchPool) {
     runStats.uniqueHashes++;
   }
 
+  // record runs
+  if (gameState.won || gameState.dead) {
+
+    // exploredStatesMin[gameState.numberPath.join("")] = minClone;
+    if (gameState.won) {
+      runStats.won += 1;
+    }
+    if (gameState.dead) {
+      runStats.dead += 1;
+    }
+    // god damn you
+    // insertIntoPriorityQueue(allRuns, { value: cloneState(gameState), priority: scoreState(gameState), won: gameState.won });
+  }
 
   // if (priorityMode) {
   // add child by score
@@ -226,126 +227,92 @@ function format(number) {
   if (number < 1e3)
     return number.toFixed(2);
   else if (number < 1e6)
-    return (number / 1000).toFixed(2) + " k";
+    return (number / 1000).toFixed(2) + "k";
   else if (number < 1e9)
-    return (number / 1000000).toFixed(2) + " M";
+    return (number / 1000000).toFixed(2) + "M";
   else if (number < 1e12)
-    return (number / 1000000000).toFixed(2) + " B";
+    return (number / 1000000000).toFixed(2) + "B";
 }
 
-let explored = 0;
-let totalExplored = 0;
-let totalStartTime = process.hrtime();
-let poolsExplored = 0;
-function explorePool() {
+function linearExploreAll() {
+  let explored = 0;
+  let totalExplored = 0;
+  let step = 1;
+  let writeStep = 100000;
+  let targetZone = 1;
+  let limitedTargetTurn = 250;
+  let targetTurn = 1;
+
+  let turnRecords = {};
+  let totalStartTime = process.hrtime();
   // while (explored < 10000) {
 
 
   // for (let idx = 0; idx < 100; idx++) {
-  // console.log("|----------------------------------|");
-  // while (!allExplored(flatUnexploredStates)) {
-  // explore shit
-  // console.time("Duration");
-  let startTime = process.hrtime();
-  // exploreNStates(step);
-  // explored += step;
-  let pool = flatUnexploredStates.nextPool();
-  // TODO: get next unexplored states
-  for (let state of pool) {
-    gameState = state;
-    // flatUnexploredStates.sort((a, b) => (a.zone - b.zone));
-    // console.log(`Zone of first element:`, getNextUnexploredState().zone);
-    exploreState(gameState, hashRecord, runStats, flatUnexploredStates);
-    explored += 1;
-  }
+  while (!flatUnexploredStates.allExplored()) {
+    // console.log("|----------------------------------|");
+    // while (!allExplored(flatUnexploredStates)) {
+    // explore shit
+    // console.time("Duration");
+    let startTime = process.hrtime();
+    // exploreNStates(step);
+    // explored += step;
+    let pool = flatUnexploredStates.nextPool();
+    // TODO: get next unexplored states
+    for (let state of pool) {
+      gameState = state;
+      // flatUnexploredStates.sort((a, b) => (a.zone - b.zone));
+      // console.log(`Zone of first element:`, getNextUnexploredState().zone);
+      exploreState(gameState, hashRecord, runStats, flatUnexploredStates);
+      explored += 1;
+    }
 
-  // zone explored
-  // fs.writeFileSync(`./exploredHASH.json`, JSON.stringify(hashRecord));
-  // fs.writeFileSync(`./exploredHASH ${upcomingTurn() - 1}.json`, JSON.stringify(hashRecord));
+    // zone explored
+    // fs.writeFileSync(`./exploredHASH.json`, JSON.stringify(hashRecord));
+    // fs.writeFileSync(`./exploredHASH ${upcomingTurn() - 1}.json`, JSON.stringify(hashRecord));
 
-  totalExplored += explored;
-  poolsExplored += 1;
+    totalExplored += explored;
 
-  let currentStage = flatUnexploredStates.bucketCriterion(gameState);
-  // let endTime = process.hrtime(startTime);
-  let endTime = process.hrtime(totalStartTime);
-  let millis = (endTime[0] * 1e3 + endTime[1] / 1e6);
-  let speed = totalExplored / millis * 1000;
-
-  if (poolsExplored % 100 === 0) {
+    let currentStage = flatUnexploredStates.bucketCriterion(gameState);
+    // let endTime = process.hrtime(startTime);
+    let endTime = process.hrtime(totalStartTime);
+    let millis = (endTime[0] * 1e3 + endTime[1] / 1e6);
+    let speed = totalExplored / millis * 1000;
     console.log("-----------------------------------");
     // console.log(displayState(gameState));
     // console.timeEnd("Duration");
     // console.log(`Stage: ${currentStage}, time ${millis.toFixed(0)}, states ${explored}`);
     console.log(`States/second: ${format(speed)}`);
-    console.log(`${(format(process.memoryUsage().rss))}B memory used`);
+    console.log(`${(format(process.memoryUsage().rss))}B rss`);
     // console.log(`${(process.memoryUsage().heapUsed / 1000000).toFixed(2)} MB heapUsed`);
     // console.log(`${(process.memoryUsage().heapTotal / 1000000).toFixed(2)} MB heapTotal`);
     console.log(`${format(totalExplored)} explored, ${format(flatUnexploredStates.getStates().length)} unexplored states.` +
-      `Won: ${format(runStats.won)}, Dead: ${format(runStats.dead)}`);
-    console.log(`duplicates: ${format(runStats.dupeHashes)}, uniqueHashes: ${format(runStats.uniqueHashes)}, collision%: ${format(runStats.dupeHashes / (runStats.uniqueHashes + runStats.dupeHashes) * 100)}`);
+      `Won: ${runStats.won}, Dead: ${runStats.dead}`);
+    console.log(`duplicates: ${runStats.dupeHashes}, uniqueHashes: ${runStats.uniqueHashes}, collision%: ${runStats.dupeHashes / (runStats.uniqueHashes + runStats.dupeHashes) * 100}`);
     // turnRecords[currentStage] = {
     //   explored, speed: (explored / millis * 1000).toFixed(1), totalTime: millis / 1000
     // };
-    console.log(tagRun(cloneState(flatUnexploredStates.getNextState(), true)));
-    // console.log("zones reached:");
-    // console.log(flatUnexploredStates.bucketAnalysis(state => state.zone).bucketAnalysis);
-    // console.log(cloneState(flatUnexploredStates.getNextState(), false));
-  }
 
-  // console.log(`RSize: ${roughSizeOfObject(flatUnexploredStates)}`);
-  // console.log(`JSize: ${JSON.stringify(flatUnexploredStates).length}`);
-  // console.log(`Len: ${(flatUnexploredStates).length}`);
-  // fs.writeFileSync(`./turnRecords.json`, JSON.stringify(turnRecords));
-  // delete hashRecord;
-
-  // RAMO: when set to true, it resets the hash records, meaning it uses less memory, but processes
-  // exponentially more duplicates
-  // when set to false, it avoids duplicates and explores more efficiently, however it burns RAM
-  let deleteRecords = false;
-  if (deleteRecords) {
+    // console.log(`RSize: ${roughSizeOfObject(flatUnexploredStates)}`);
+    // console.log(`JSize: ${JSON.stringify(flatUnexploredStates).length}`);
+    // console.log(`Len: ${(flatUnexploredStates).length}`);
+    // fs.writeFileSync(`./turnRecords.json`, JSON.stringify(turnRecords));
+    // delete hashRecord;
     hashRecord = {};
+
+    // display zone distributions:
+    // let zoneAnalysed = 0;
+
+    // runStats.uniqueHashes = 0;
+    // runStats.dupeHashes = 0;
+    explored = 0;
+    // runStats.dead = 0;
   }
-
-  // display zone distributions:
-  // let zoneAnalysed = 0;
-
-  // runStats.uniqueHashes = 0;
-  // runStats.dupeHashes = 0;
-  explored = 0;
-  // runStats.dead = 0;
 }
-
 
 console.time("Exploration");
-// explorePool();
+linearExploreAll();
 console.timeEnd("Exploration");
 
-
-
-let manualMode = false;
-
-
-async function recursiveFunction() {
-  // Perform some asynchronous operation
-  await someAsyncOperation();
-
-  // Call itself when done
-  recursiveFunction();
-}
-
-async function someAsyncOperation() {
-  return new Promise((resolve) => {
-    // Simulate an asynchronous operation (e.g., fetching data)
-    explorePool();
-    // setTimeout(() => {
-    //   console.log('Async operation complete');
-    resolve();
-    // }, 2000); // Simulating a 2-second async operation
-  });
-}
-
-// Start the recursive task
-recursiveFunction();
 // best run
 // autoRun([0, 3, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 1, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 2, 4, 0, 0, 0, 0, 0, 0, 0, 2, 4, 0, 0, 0, 0, 0, 0, 2, 3, 4, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 4, 0, 0, 0, 0, 0, 0, 1, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 2, 3, 3, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);;
