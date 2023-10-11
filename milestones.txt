@@ -26,6 +26,7 @@
 
 ----
 
+- diff storing {hp: 50, damage: 5} -> {hp: 51, damage: 5} / {hp:+1, parent: X}
 - take the last states added, explore to completion
 - time;space hashing, for each increment of time, take a sub-sub-pool per zone and compare it to the zone hash
 - pull up relevant hash records for upcoming pool

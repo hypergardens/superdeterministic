@@ -59,6 +59,12 @@ class FlatSearchPool {
   nextPool() {
     this.clean();
     this.pool.sort((a, b) => a.numberPath.length - b.numberPath.length);
+    let criterion = this.pool[0].numberPath.length;
+
+    let upcoming = this.pool.filter(elem => elem.numberPath.length === criterion);
+    // console.log(`${upcoming.length} upcoming states with criterion ${criterion}`);
+    this.slideIdx(upcoming.length);
+    return upcoming;
     // this.pool.sort((a, b) => -a.zone + b.zone);
     if (this.getStates().length > 100) {
       let upcoming = this.getStates().slice(0, 100);

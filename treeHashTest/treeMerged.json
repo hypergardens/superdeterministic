@@ -1,0 +1,21 @@
+{
+  "hp_10": {
+    "damage_5": {
+      "defense_5": {
+        "count": 2
+      }
+    },
+    "damage_8": {
+      "defense_undefined": {
+        "count": 1
+      }
+    }
+  },
+  "hp_2": {
+    "damage_6": {
+      "defense_5": {
+        "count": 1
+      }
+    }
+  }
+}

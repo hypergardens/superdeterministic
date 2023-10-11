@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const { insertIntoPriorityQueue } = require("./library");
+const { insertIntoPriorityQueue, format } = require("./library");
 const { generateActions } = require("./generateActions");
 const { lastZone } = require("./gameData");
 const { FlatSearchPool } = require('./searchPool');
@@ -222,21 +222,11 @@ function autoRun(numberPath) {
 }
 /////////////////////////////////////////////////////// async explore
 
-function format(number) {
-  if (number < 1e3)
-    return number.toFixed(2);
-  else if (number < 1e6)
-    return (number / 1000).toFixed(2) + " k";
-  else if (number < 1e9)
-    return (number / 1000000).toFixed(2) + " M";
-  else if (number < 1e12)
-    return (number / 1000000000).toFixed(2) + " B";
-}
-
 let explored = 0;
 let totalExplored = 0;
 let totalStartTime = process.hrtime();
 let poolsExplored = 0;
+let maxPoolsExplored = 150;
 function explorePool() {
   // while (explored < 10000) {
 
@@ -249,8 +239,14 @@ function explorePool() {
   let startTime = process.hrtime();
   // exploreNStates(step);
   // explored += step;
+
+  console.log(flatUnexploredStates.bucketAnalysis(state => state.numberPath.length).bucketAnalysis);
   let pool = flatUnexploredStates.nextPool();
+  let currentStage = pool[0].numberPath.length;
+  console.log(`S: ${currentStage} pool size: ${pool.length}`);
   // TODO: get next unexplored states
+
+
   for (let state of pool) {
     gameState = state;
     // flatUnexploredStates.sort((a, b) => (a.zone - b.zone));
@@ -266,13 +262,12 @@ function explorePool() {
   totalExplored += explored;
   poolsExplored += 1;
 
-  let currentStage = flatUnexploredStates.bucketCriterion(gameState);
   // let endTime = process.hrtime(startTime);
   let endTime = process.hrtime(totalStartTime);
   let millis = (endTime[0] * 1e3 + endTime[1] / 1e6);
   let speed = totalExplored / millis * 1000;
 
-  if (poolsExplored % 100 === 0) {
+  if (poolsExplored % 1 === 0) {
     console.log("-----------------------------------");
     // console.log(displayState(gameState));
     // console.timeEnd("Duration");
@@ -289,7 +284,6 @@ function explorePool() {
     // };
     console.log(tagRun(cloneState(flatUnexploredStates.getNextState(), true)));
     // console.log("zones reached:");
-    // console.log(flatUnexploredStates.bucketAnalysis(state => state.zone).bucketAnalysis);
     // console.log(cloneState(flatUnexploredStates.getNextState(), false));
   }
 
@@ -331,7 +325,9 @@ async function recursiveFunction() {
   await someAsyncOperation();
 
   // Call itself when done
-  recursiveFunction();
+  if (poolsExplored < maxPoolsExplored) {
+    recursiveFunction();
+  }
 }
 
 async function someAsyncOperation() {

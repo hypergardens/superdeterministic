@@ -50,6 +50,18 @@ function roughSizeOfObject(object) {
   return bytes;
 }
 
+
+function format(number) {
+  if (number < 1e3)
+    return number.toFixed(2);
+  else if (number < 1e6)
+    return (number / 1000).toFixed(2) + " k";
+  else if (number < 1e9)
+    return (number / 1000000).toFixed(2) + " M";
+  else if (number < 1e12)
+    return (number / 1000000000).toFixed(2) + " B";
+}
+
 module.exports = {
-  insertIntoPriorityQueue, roughSizeOfObject
+  insertIntoPriorityQueue, roughSizeOfObject, format
 };
