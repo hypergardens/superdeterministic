@@ -3,8 +3,8 @@ const fs = require('fs');
 const { insertIntoPriorityQueue, format } = require("./library");
 const { generateActions } = require("./generateActions");
 const { lastZone } = require("./gameData");
-const { FlatSearchPool } = require('./searchPool');
-// var hash = require('object-hash');
+const { FlatSearchPool, bucketAnalysis } = require('./searchPool');
+var hash = require('object-hash');
 
 function scoreState(state) {
   // play around, make your own scores!
@@ -55,7 +55,6 @@ let gameState = {
   enemy: {},
 };
 
-let hashRecord = {};
 let runStats = {
   dead: 0,
   won: 0,
@@ -146,22 +145,12 @@ function getChildStates(gameState) {
     // action.execute(childState);
     takeAction(childState, action, idx);
     // add to children
-
-    // let hash = customHash(childState);
-    // if (hashRecord[hash]) {
-    //   // duplicate child
-    // } else {
-    // }
     childStates.push(childState);
   };
   return childStates;
 }
 function exploreState(gameState, hashRecord, runStats, searchPool) {
   // mark this state as explored
-  // let path = gameState.numberPath.toString();
-  // let storedState = cloneState(gameState, true);
-  // exploredStates[path] = storedState;
-
   // record runs
   if (gameState.won || gameState.dead) {
 
@@ -172,21 +161,14 @@ function exploreState(gameState, hashRecord, runStats, searchPool) {
     if (gameState.dead) {
       runStats.dead += 1;
     }
-    // TODO: decide where this should go, abort exploring dead/won states
-    return;
-    // god damn you
-    // insertIntoPriorityQueue(allRuns, { value: cloneState(gameState), priority: scoreState(gameState), won: gameState.won });
+    // return;
   }
 
-  let minClone = cloneState(gameState, false);
   // mark with hash
+  let minClone = cloneState(gameState, false);
   let hash = customHash(minClone);
   // console.log(hash);
-  let bucket = gameState.zone;
-  if (!hashRecord[bucket]) {
-    hashRecord[bucket] = {};
-  }
-  if (hashRecord[bucket][hash]) {
+  if (hashRecord[hash]) {
     // different states, same hash
     // if (JSON.stringify(hashRecord[hash].state) !== JSON.stringify(minClone)) {
     //   console.warn(`HASH COLLISION`);
@@ -194,21 +176,15 @@ function exploreState(gameState, hashRecord, runStats, searchPool) {
     //   fs.writeFileSync(`./ERROR.log`, `HASH COLLISION at ${JSON.stringify(minClone)}`);
     // } else {
     runStats.dupeHashes++;
-    hashRecord[bucket][hash].count += 1;
+    hashRecord[hash].count += 1;
     // }
     return;
   } else {
-    // hashRecord[bucket][hash] = { count: 1, state: minClone, path: gameState.numberPath };
-    hashRecord[bucket][hash] = { count: 1, path: gameState.numberPath };
+    // hashRecord[hash] = { count: 1, state: minClone, path: gameState.numberPath };
+    hashRecord[hash] = { count: 1 };
     runStats.uniqueHashes++;
   }
 
-
-  // if (priorityMode) {
-  // add child by score
-  // let prioritisedChildren = childStates.map(state => ({ value: state, priority: scoreState(state) }));
-  // prioritisedChildren.forEach(child => insertIntoPriorityQueue(priorityUnexploredStates, child));
-  // TODO: optimise concat?
   searchPool.addStates(getChildStates(gameState));
 }
 
@@ -227,117 +203,94 @@ let totalExplored = 0;
 let totalStartTime = process.hrtime();
 let poolsExplored = 0;
 let maxPoolsExplored = 150;
-function explorePool() {
-  // while (explored < 10000) {
 
 
-  // for (let idx = 0; idx < 100; idx++) {
-  // console.log("|----------------------------------|");
-  // while (!allExplored(flatUnexploredStates)) {
-  // explore shit
-  // console.time("Duration");
-  let startTime = process.hrtime();
-  // exploreNStates(step);
-  // explored += step;
-
-  console.log(flatUnexploredStates.bucketAnalysis(state => state.numberPath.length).bucketAnalysis);
-  let pool = flatUnexploredStates.nextPool();
-  let currentStage = pool[0].numberPath.length;
-  console.log(`S: ${currentStage} pool size: ${pool.length}`);
+function explorePool(pool, bucketFunction) {
+  let hashBucket = bucketFunction(pool[0]);
+  console.log(`HashBucket: ${hashBucket}, pool size: ${pool.length}`);
   // TODO: get next unexplored states
 
+  // pull up hash
+  let hashRecord = {};
+  let hashPath = `./hashes/hash_${hashBucket}.json`;
+  if (fs.existsSync(hashPath)) {
+    hashRecord = JSON.parse(fs.readFileSync(hashPath));
+  }
 
   for (let state of pool) {
     gameState = state;
-    // flatUnexploredStates.sort((a, b) => (a.zone - b.zone));
-    // console.log(`Zone of first element:`, getNextUnexploredState().zone);
     exploreState(gameState, hashRecord, runStats, flatUnexploredStates);
-    explored += 1;
   }
 
-  // zone explored
-  // fs.writeFileSync(`./exploredHASH.json`, JSON.stringify(hashRecord));
-  // fs.writeFileSync(`./exploredHASH ${upcomingTurn() - 1}.json`, JSON.stringify(hashRecord));
+  // write and remove hash
+  // console.log("hash after", hashRecord);
 
-  totalExplored += explored;
-  poolsExplored += 1;
+  fs.writeFileSync(hashPath, JSON.stringify(hashRecord));
+
+  // poolsExplored += 1;
 
   // let endTime = process.hrtime(startTime);
   let endTime = process.hrtime(totalStartTime);
   let millis = (endTime[0] * 1e3 + endTime[1] / 1e6);
   let speed = totalExplored / millis * 1000;
 
-  if (poolsExplored % 1 === 0) {
-    console.log("-----------------------------------");
-    // console.log(displayState(gameState));
-    // console.timeEnd("Duration");
-    // console.log(`Stage: ${currentStage}, time ${millis.toFixed(0)}, states ${explored}`);
-    console.log(`States/second: ${format(speed)}`);
-    console.log(`${(format(process.memoryUsage().rss))}B memory used`);
-    // console.log(`${(process.memoryUsage().heapUsed / 1000000).toFixed(2)} MB heapUsed`);
-    // console.log(`${(process.memoryUsage().heapTotal / 1000000).toFixed(2)} MB heapTotal`);
-    console.log(`${format(totalExplored)} explored, ${format(flatUnexploredStates.getStates().length)} unexplored states.` +
-      `Won: ${format(runStats.won)}, Dead: ${format(runStats.dead)}`);
-    console.log(`duplicates: ${format(runStats.dupeHashes)}, uniqueHashes: ${format(runStats.uniqueHashes)}, collision%: ${format(runStats.dupeHashes / (runStats.uniqueHashes + runStats.dupeHashes) * 100)}`);
-    // turnRecords[currentStage] = {
-    //   explored, speed: (explored / millis * 1000).toFixed(1), totalTime: millis / 1000
-    // };
-    console.log(tagRun(cloneState(flatUnexploredStates.getNextState(), true)));
-    // console.log("zones reached:");
-    // console.log(cloneState(flatUnexploredStates.getNextState(), false));
-  }
+  console.log("-----------------------------------");
+  //   // console.log(displayState(gameState));
+  //   // console.timeEnd("Duration");
+  //   // console.log(`Stage: ${hashBucket}, time ${millis.toFixed(0)}, states ${explored}`);
+  console.log(`States/second: ${format(speed)}`);
+  //   console.log(`${(format(process.memoryUsage().rss))}B memory used`);
+  //   // console.log(`${(process.memoryUsage().heapUsed / 1000000).toFixed(2)} MB heapUsed`);
+  //   // console.log(`${(process.memoryUsage().heapTotal / 1000000).toFixed(2)} MB heapTotal`);
+  console.log(`${format(totalExplored)} explored, ${format(flatUnexploredStates.getStates().length)} unexplored states.` +
+    `Won: ${format(runStats.won)}, Dead: ${format(runStats.dead)}`);
+  console.log(`duplicates: ${format(runStats.dupeHashes)}, uniqueHashes: ${format(runStats.uniqueHashes)}, collision%: ${format(runStats.dupeHashes / (runStats.uniqueHashes + runStats.dupeHashes) * 100)}`);
+  //   // turnRecords[hashBucket] = {
+  //   //   explored, speed: (explored / millis * 1000).toFixed(1), totalTime: millis / 1000
+  //   // };
+  // console.log(tagRun(pool[0], true));
+  //   // console.log("zones reached:");
+  //   // console.log(cloneState(flatUnexploredStates.getNextState(), false));
 
-  // console.log(`RSize: ${roughSizeOfObject(flatUnexploredStates)}`);
-  // console.log(`JSize: ${JSON.stringify(flatUnexploredStates).length}`);
-  // console.log(`Len: ${(flatUnexploredStates).length}`);
-  // fs.writeFileSync(`./turnRecords.json`, JSON.stringify(turnRecords));
-  // delete hashRecord;
-
-  // RAMO: when set to true, it resets the hash records, meaning it uses less memory, but processes
-  // exponentially more duplicates
-  // when set to false, it avoids duplicates and explores more efficiently, however it burns RAM
-  let deleteRecords = false;
-  if (deleteRecords) {
-    hashRecord = {};
-  }
-
-  // display zone distributions:
-  // let zoneAnalysed = 0;
-
-  // runStats.uniqueHashes = 0;
-  // runStats.dupeHashes = 0;
-  explored = 0;
-  // runStats.dead = 0;
+  delete hashRecord;
 }
-
-
-console.time("Exploration");
-// explorePool();
-console.timeEnd("Exploration");
-
-
 
 let manualMode = false;
 
-
 async function recursiveFunction() {
   // Perform some asynchronous operation
-  await someAsyncOperation();
+  await asyncNextPool();
 
   // Call itself when done
-  if (poolsExplored < maxPoolsExplored) {
-    recursiveFunction();
-  }
+  // if (poolsExplored < maxPoolsExplored) {
+  recursiveFunction();
+  // }
 }
 
-async function someAsyncOperation() {
+
+function customBucket(state) {
+  // return Math.floor((state.player.damage + state.player.defense) / 5);
+  // return state.player.maxHp;
+  // return state.enemy && state.enemy.hp !== undefined ? -state.enemy.hp : x;
+  return state.zone;
+  // return Math.floor(state.zone / 5);
+  // return `${state.zone}: ${state.player.hp}h`;
+  // return `${state.zone}: ${state.player.hp}h ${state.player.damage}a ${state.player.defense}d ${state.player.gold}g`;
+}
+
+async function asyncNextPool() {
   return new Promise((resolve) => {
     // Simulate an asynchronous operation (e.g., fetching data)
-    explorePool();
-    // setTimeout(() => {
-    //   console.log('Async operation complete');
+
+    let { upcoming, bucket } = flatUnexploredStates.nextPool(customBucket);
+    // let analysis = bucketAnalysis(upcoming, (state) => (state.zone)).bucketAnalysis;
+    // console.log(analysis);
+    totalExplored += upcoming.length;
+    explorePool(upcoming, customBucket);
+    console.log(`Fringe: ${format(flatUnexploredStates.pool.length)}`);
+    console.log(`Explored: ${format(totalExplored)}`);
+
     resolve();
-    // }, 2000); // Simulating a 2-second async operation
   });
 }
 

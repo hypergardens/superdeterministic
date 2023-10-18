@@ -102,43 +102,47 @@ class TreeHash {
 // let stateB = { hp: 10, damage: 5, defense: 5 };
 // let stateC = { hp: 10, damage: 8 };
 // let stateD = { hp: 2, damage: 6, defense: 5 };
+if (testing) {
 
-function randInt(n) {
-  return Math.floor(Math.random() * n);
-}
-let values = 4;
-console.time("insert");
-let treeHash = new TreeHash(true);
-for (let idx = 1; idx <= 10; idx++) {
-  treeHash.insert({ hp: randInt(values), damage: randInt(values) });
-  treeHash.insert({ damage: randInt(values) });
-  treeHash.insert({ hp: randInt(values) });
-
-  if (idx % 1 === 0) {
-    console.log(`idx: ${idx}, mem: ${format(memoryUsage().rss)}`);
-    console.log(`uniques: ${treeHash.uniques}, duplicates: ${treeHash.duplicates}`);
+  function randInt(n) {
+    return Math.floor(Math.random() * n);
   }
+  let values = 4;
+  console.time("insert");
+  let treeHash = new TreeHash(true);
+  for (let idx = 1; idx <= 10; idx++) {
+    treeHash.insert({ hp: randInt(values), damage: randInt(values) });
+    treeHash.insert({ damage: randInt(values) });
+    treeHash.insert({ hp: randInt(values) });
+
+    if (idx % 1 === 0) {
+      console.log(`idx: ${idx}, mem: ${format(memoryUsage().rss)}`);
+      console.log(`uniques: ${treeHash.uniques}, duplicates: ${treeHash.duplicates}`);
+    }
+  }
+  console.timeEnd("insert");
+
+
+  for (let idx = 1; idx <= 10; idx++) {
+    let newState = ({ damage: randInt(values * 2) });
+    console.log(`state contained: ${treeHash.contains(newState)} ${JSON.stringify(newState)}`);
+  }
+  // console.time("insert deep");
+  // let treeHashDeep = new TreeHash();
+  // for (let idx = 0; idx < 100000; idx++) {
+  //   treeHashDeep.insert({ hp: randInt(values), damage: randInt(values), defense: randInt(values) }, true);
+  // }
+  // console.timeEnd("insert deep");
+  // treeHash.insert(stateA);
+  // treeHash.insert(stateB);
+  // treeHash.insert(stateC);
+  // treeHash.insert(stateD);
+  // console.log(JSON.stringify(treeHash.map));
+
+
+  fs.writeFileSync(`./tree.json`, JSON.stringify(treeHash.map));
+  // let dataC = treeHash["hp"][2]["damage"][6]; // { won: false }
+  // let rizzC = treeHash["hp_2"]["damage_6"]; // { won: false }
 }
-console.timeEnd("insert");
 
-
-for (let idx = 1; idx <= 10; idx++) {
-  let newState = ({ damage: randInt(values * 2) });
-  console.log(`state contained: ${treeHash.contains(newState)} ${JSON.stringify(newState)}`);
-}
-// console.time("insert deep");
-// let treeHashDeep = new TreeHash();
-// for (let idx = 0; idx < 100000; idx++) {
-//   treeHashDeep.insert({ hp: randInt(values), damage: randInt(values), defense: randInt(values) }, true);
-// }
-// console.timeEnd("insert deep");
-// treeHash.insert(stateA);
-// treeHash.insert(stateB);
-// treeHash.insert(stateC);
-// treeHash.insert(stateD);
-// console.log(JSON.stringify(treeHash.map));
-
-
-fs.writeFileSync(`./tree.json`, JSON.stringify(treeHash.map));
-// let dataC = treeHash["hp"][2]["damage"][6]; // { won: false }
-// let rizzC = treeHash["hp_2"]["damage_6"]; // { won: false }
+module.exports = { TreeHash };

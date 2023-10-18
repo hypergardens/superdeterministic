@@ -1,0 +1,22 @@
+{
+  "zone": 29,
+  "won": false,
+  "dead": false,
+  "player": {
+    "damage": 8,
+    "defense": 5,
+    "maxHp": 10,
+    "hp": 1,
+    "gold": 242,
+    "weaponName": "Falchion",
+    "armourName": "Gold Shield"
+  },
+  "enemy": {
+    "name": "Swarm of Spiders",
+    "damage": 9,
+    "defense": 2,
+    "hp": 15,
+    "maxHp": 15,
+    "gold": 0
+  }
+}

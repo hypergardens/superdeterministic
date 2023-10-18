@@ -36,35 +36,29 @@ class FlatSearchPool {
   getStates() {
     return this.pool.slice(this.idx);
   }
-  bucketAnalysis(func) {
-    let bucketAnalysis = {};
-    let buckets = [];
-    for (let state of this.getStates()) {
-      let bucket = func ? func(state) : this.bucketCriterion(state);
-      if (!bucketAnalysis[bucket]) {
-        buckets.push(bucket);
-        bucketAnalysis[bucket] = 1;
-      } else {
-        bucketAnalysis[bucket] += 1;
-      }
-    }
-
-    return { bucketAnalysis, buckets };
-  }
   bucketCriterion(state) {
     // return -state.zone;
     // return state.zone;
     return state.numberPath.length;
   }
-  nextPool() {
+  nextPool(bucketFunction) {
     this.clean();
-    this.pool.sort((a, b) => a.numberPath.length - b.numberPath.length);
-    let criterion = this.pool[0].numberPath.length;
+    this.pool.sort((item0, item1) => {
+      if (bucketFunction(item0) > bucketFunction(item1))
+        return -1;
+      if (bucketFunction(item0) < bucketFunction(item1))
+        return 1;
+      return 0;
+    });
+    let bucket = bucketFunction(this.pool[0]);
 
-    let upcoming = this.pool.filter(elem => elem.numberPath.length === criterion);
-    // console.log(`${upcoming.length} upcoming states with criterion ${criterion}`);
+    let upcoming = this.pool.filter(elem => bucketFunction(elem) === bucket);
+    if (upcoming.length > 50000) {
+      upcoming = upcoming.slice(0, 50000);
+    }
+    // console.log(`${upcoming.length} upcoming states with bucket ${bucket}`);
     this.slideIdx(upcoming.length);
-    return upcoming;
+    return { upcoming, bucket };
     // this.pool.sort((a, b) => -a.zone + b.zone);
     if (this.getStates().length > 100) {
       let upcoming = this.getStates().slice(0, 100);
@@ -84,6 +78,24 @@ class FlatSearchPool {
     return upcoming;
   }
 }
+
+
+function bucketAnalysis(pool, func) {
+  let bucketAnalysis = {};
+  let buckets = [];
+  for (let state of pool) {
+    let bucket = func(state);
+    if (!bucketAnalysis[bucket]) {
+      buckets.push(bucket);
+      bucketAnalysis[bucket] = 1;
+    } else {
+      bucketAnalysis[bucket] += 1;
+    }
+  }
+
+  return { bucketAnalysis, buckets };
+}
+
 module.exports = {
-  FlatSearchPool
+  FlatSearchPool, bucketAnalysis
 };
