@@ -257,15 +257,6 @@ function explorePool(pool, bucketFunction) {
 
 let manualMode = false;
 
-async function recursiveFunction() {
-  // Perform some asynchronous operation
-  await asyncNextPool();
-
-  // Call itself when done
-  // if (poolsExplored < maxPoolsExplored) {
-  recursiveFunction();
-  // }
-}
 
 
 function customBucket(state) {
@@ -279,22 +270,25 @@ function customBucket(state) {
 }
 
 async function asyncNextPool() {
-  return new Promise((resolve) => {
-    // Simulate an asynchronous operation (e.g., fetching data)
+  // Simulate an asynchronous operation (e.g., fetching data)
 
-    let { upcoming, bucket } = flatUnexploredStates.nextPool(customBucket);
-    // let analysis = bucketAnalysis(upcoming, (state) => (state.zone)).bucketAnalysis;
-    // console.log(analysis);
-    totalExplored += upcoming.length;
-    explorePool(upcoming, customBucket);
-    console.log(`Fringe: ${format(flatUnexploredStates.pool.length)}`);
-    console.log(`Explored: ${format(totalExplored)}`);
+  let { upcoming, bucket } = flatUnexploredStates.nextPool(customBucket);
+  // let analysis = bucketAnalysis(upcoming, (state) => (state.zone)).bucketAnalysis;
+  // console.log(analysis);
+  totalExplored += upcoming.length;
+  explorePool(upcoming, customBucket);
+  console.log(`Fringe: ${format(flatUnexploredStates.pool.length)}`);
+  console.log(`Explored: ${format(totalExplored)}`);
 
-    resolve();
-  });
 }
 
 // Start the recursive task
-recursiveFunction();
+async function main() {
+  while (true) {
+    await asyncNextPool();
+  }
+}
+
+main();
 // best run
 // autoRun([0, 3, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0, 1, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 2, 4, 0, 0, 0, 0, 0, 0, 0, 2, 4, 0, 0, 0, 0, 0, 0, 2, 3, 4, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 4, 0, 0, 0, 0, 0, 0, 1, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 2, 3, 3, 3, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);;
