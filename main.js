@@ -1,10 +1,11 @@
 const fs = require('fs');
 
-const { insertIntoPriorityQueue, format } = require("./library");
+const { format } = require("./library");
 const { generateActions } = require("./generateActions");
 const { lastZone } = require("./gameData");
-const { FlatSearchPool, bucketAnalysis } = require('./searchPool');
+const { FlatSearchPool, bucketAnalysis } = require('./old/searchPool');
 var hash = require('object-hash');
+const { SimpleSearchPool } = require('./simplePool');
 
 function scoreState(state) {
   // play around, make your own scores!
@@ -23,10 +24,10 @@ function scoreState(state) {
 
 function customHash(gameState) {
   // return hash(gameState);
-  return `${gameState.zone};` +
-    `${gameState.player.damage};${gameState.player.defense};${gameState.player.maxHp};${gameState.player.hp};${gameState.player.gold};` +
-    (gameState.zone % 4 === 0 ? "" : `${gameState.enemy.name};${gameState.enemy.damage};${gameState.enemy.defense};${gameState.enemy.hp};${gameState.enemy.maxHp};${gameState.enemy.gold};`);
-  // return JSON.stringify(gameState);
+  // return `${gameState.zone};` +
+  //   `${gameState.player.damage};${gameState.player.defense};${gameState.player.maxHp};${gameState.player.hp};${gameState.player.gold};` +
+  //   (gameState.zone % 4 === 0 ? "" : `${gameState.enemy.name};${gameState.enemy.damage};${gameState.enemy.defense};${gameState.enemy.hp};${gameState.enemy.maxHp};${gameState.enemy.gold};`);
+  return JSON.stringify(gameState);
   // return "test";
 }
 
@@ -35,6 +36,7 @@ console.log("hello world");
 // there's always friction at first
 // nekromantik design
 let gameState = {
+
   numberPath: [],
   actionPath: [],
   codePath: [],
@@ -62,6 +64,15 @@ let runStats = {
   dupeHashes: 0
 };
 
+let hashRecord = {};
+
+let explored = 0;
+let totalExplored = 0;
+let totalStartTime = process.hrtime();
+let poolsExplored = 0;
+let maxPoolsExplored = 150;
+let manualMode = false;
+
 function cloneState(state, full = true) {
   // TODO: clean this up
   let newState = {};
@@ -82,21 +93,17 @@ function displayState(gameState) {
   return (gameState.won ? "👑" : "💀") + ` Zone ${gameState.zone}, ${gameState.player.damage} 🗡️, ${gameState.player.defense} 🛡️, ${gameState.player.hp}/${gameState.player.maxHp} ❤️, ${gameState.player.gold} 🪙`;
 }
 
+function tagRun(gameState) {
+  return "\n " + (gameState.won ? "👑" : (gameState.dead ? "💀" : "?")) + gameState.codePath.join("") + ` Zone ${gameState.zone}, ${gameState.player.damage} 🗡️, ${gameState.player.defense} 🛡️, ${gameState.player.hp}/${gameState.player.maxHp} ❤️, ${gameState.player.gold} 🪙`;
+}
 
-let priorityMode = false;
-// let priorityUnexploredStates = [{ value: gameState, priority: scoreState(gameState) }];
-let flatUnexploredStates = new FlatSearchPool();
+let flatUnexploredStates = new SimpleSearchPool();
 flatUnexploredStates.addStates([gameState]);
-let unexploredIdx = 0;
 
 function takeAction(gameState, action, idx) {
   if (action.condition(gameState)) {
     // console.log(`action taken: ${idx} ${action.name}`);
     gameState.numberPath.push(idx);
-    // ignore attacks on action path
-    // if (action.name !== "Attack") {
-    // gameState.actionPath.push(action.name);
-    // }
     // mark code path for visualisation
     if (action.code) {
       gameState.codePath.push(action.code);
@@ -120,13 +127,7 @@ function takeActionByNumber(gameState, actions, idx) {
 }
 
 
-function tagRun(gameState) {
-  return "\n " + (gameState.won ? "👑" : (gameState.dead ? "💀" : "?")) + gameState.codePath.join("") + ` Zone ${gameState.zone}, ${gameState.player.damage} 🗡️, ${gameState.player.defense} 🛡️, ${gameState.player.hp}/${gameState.player.maxHp} ❤️, ${gameState.player.gold} 🪙`;
-}
-
-
 function getChildStates(gameState) {
-
   // get possible actions
   let visibleActions = generateActions(gameState);
   // console.log(visibleActions);
@@ -149,7 +150,7 @@ function getChildStates(gameState) {
   };
   return childStates;
 }
-function exploreState(gameState, hashRecord, runStats, searchPool) {
+function exploreState(gameState, hashRecord) {
   // mark this state as explored
   // record runs
   if (gameState.won || gameState.dead) {
@@ -178,14 +179,13 @@ function exploreState(gameState, hashRecord, runStats, searchPool) {
     runStats.dupeHashes++;
     hashRecord[hash].count += 1;
     // }
-    return;
+    return [];
   } else {
     // hashRecord[hash] = { count: 1, state: minClone, path: gameState.numberPath };
     hashRecord[hash] = { count: 1 };
     runStats.uniqueHashes++;
+    return getChildStates(gameState);
   }
-
-  searchPool.addStates(getChildStates(gameState));
 }
 
 function autoRun(numberPath) {
@@ -198,41 +198,43 @@ function autoRun(numberPath) {
 }
 /////////////////////////////////////////////////////// async explore
 
-let explored = 0;
-let totalExplored = 0;
-let totalStartTime = process.hrtime();
-let poolsExplored = 0;
-let maxPoolsExplored = 150;
 
 
-function explorePool(pool, bucketFunction) {
-  let hashBucket = bucketFunction(pool[0]);
-  console.log(`HashBucket: ${hashBucket}, pool size: ${pool.length}`);
-  // TODO: get next unexplored states
 
-  // pull up hash
-  let hashRecord = {};
-  let hashPath = `./hashes/hash_${hashBucket}.json`;
-  if (fs.existsSync(hashPath)) {
-    hashRecord = JSON.parse(fs.readFileSync(hashPath));
+function customBucket(state) {
+  // return Math.floor((state.player.damage + state.player.defense) / 5);
+  // return state.player.maxHp;
+  // return state.enemy && state.enemy.hp !== undefined ? -state.enemy.hp : x;
+  return -state.zone;
+  // return Math.floor(state.zone / 5);
+  // return `${state.zone}: ${state.player.hp}h`;
+  // return `${state.zone}: ${state.player.hp}h ${state.player.damage}a ${state.player.defense}d ${state.player.gold}g`;
+}
+
+async function asyncNextPool() {
+  // Simulate an asynchronous operation (e.g., fetching data)
+
+  flatUnexploredStates.sort((state) => state.zone);
+  // let nextState = flatUnexploredStates.pool.shift();
+  // let upcoming = [nextState];
+  let upcoming = flatUnexploredStates.nextPool(customBucket);
+  console.log(`Fringe: ${format(upcoming.length)}`);
+  console.log(`Explored: ${format(totalExplored)}`);
+  console.log(tagRun(upcoming[0]));
+  // let analysis = bucketAnalysis(upcoming, (state) => (state.zone)).bucketAnalysis;
+  // console.log(analysis);
+  for (let state of upcoming) {
+    flatUnexploredStates.addStates(exploreState(state, hashRecord));
+    // if (state.won) {
+    //   throw new Error("Won");
+    // }
   }
 
-  for (let state of pool) {
-    gameState = state;
-    exploreState(gameState, hashRecord, runStats, flatUnexploredStates);
-  }
-
-  // write and remove hash
-  // console.log("hash after", hashRecord);
-
-  fs.writeFileSync(hashPath, JSON.stringify(hashRecord));
-
-  // poolsExplored += 1;
-
-  // let endTime = process.hrtime(startTime);
+  totalExplored += upcoming.length;
   let endTime = process.hrtime(totalStartTime);
   let millis = (endTime[0] * 1e3 + endTime[1] / 1e6);
   let speed = totalExplored / millis * 1000;
+
 
   console.log("-----------------------------------");
   //   // console.log(displayState(gameState));
@@ -252,33 +254,6 @@ function explorePool(pool, bucketFunction) {
   //   // console.log("zones reached:");
   //   // console.log(cloneState(flatUnexploredStates.getNextState(), false));
 
-  delete hashRecord;
-}
-
-let manualMode = false;
-
-
-
-function customBucket(state) {
-  // return Math.floor((state.player.damage + state.player.defense) / 5);
-  // return state.player.maxHp;
-  // return state.enemy && state.enemy.hp !== undefined ? -state.enemy.hp : x;
-  return state.zone;
-  // return Math.floor(state.zone / 5);
-  // return `${state.zone}: ${state.player.hp}h`;
-  // return `${state.zone}: ${state.player.hp}h ${state.player.damage}a ${state.player.defense}d ${state.player.gold}g`;
-}
-
-async function asyncNextPool() {
-  // Simulate an asynchronous operation (e.g., fetching data)
-
-  let { upcoming, bucket } = flatUnexploredStates.nextPool(customBucket);
-  // let analysis = bucketAnalysis(upcoming, (state) => (state.zone)).bucketAnalysis;
-  // console.log(analysis);
-  totalExplored += upcoming.length;
-  explorePool(upcoming, customBucket);
-  console.log(`Fringe: ${format(flatUnexploredStates.pool.length)}`);
-  console.log(`Explored: ${format(totalExplored)}`);
 
 }
 

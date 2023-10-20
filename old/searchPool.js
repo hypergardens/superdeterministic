@@ -42,14 +42,17 @@ class FlatSearchPool {
     return state.numberPath.length;
   }
   nextPool(bucketFunction) {
-    this.clean();
-    this.pool.sort((item0, item1) => {
-      if (bucketFunction(item0) > bucketFunction(item1))
-        return -1;
-      if (bucketFunction(item0) < bucketFunction(item1))
-        return 1;
-      return 0;
-    });
+    // this.clean();
+    // this.pool.sort((item0, item1) => {
+    //   if (bucketFunction(item0) > bucketFunction(item1))
+    //     return -1;
+    //   if (bucketFunction(item0) < bucketFunction(item1))
+    //     return 1;
+    //   return 0;
+    // });
+    // this.slideIdx(this.pool.length);
+
+    return [...this.pool];
     let bucket = bucketFunction(this.pool[0]);
 
     let upcoming = this.pool.filter(elem => bucketFunction(elem) === bucket);

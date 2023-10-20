@@ -26,11 +26,19 @@
 
 ----
 
-- use a db
-- create a task that either executes, or further fragments pool
+- split data into uniq and aux
+- monte carlo simulation
+- test and adjust simulation
+- both for seeDeeply
+- sigmoid function for variables
+- state flattener?
+- policy vs value networks
+- data mining the simulations
+- tree -> attrs -> stateData -> parents, children, values, dead, won, evaluated ; references to objects in the tree
+x use a db
 x store fringe by bucket as well as hashed explorations
 x generalise splitting a pool into smaller pools
-- make the bucket function and pool aware of each other
+- create a task that either executes, or further fragments pool
 - do we check individual states or dupe children?
 - diff storing {hp: 50, damage: 5} -> {hp: 51, damage: 5} / {hp:+1, parent: X}
 - take the last states added, explore to completion
