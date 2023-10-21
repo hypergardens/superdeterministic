@@ -25,9 +25,9 @@ function scoreState(state) {
 
 function customHash(gameState) {
   // return hash(gameState);
-  return `${gameState.zone};` +
+  return `${gameState.data.zone};` +
     `${gameState.player.damage};${gameState.player.defense};${gameState.player.maxHp};${gameState.player.hp};${gameState.player.gold};` +
-    (gameState.zone % 4 === 0 ? "" : `${gameState.enemy.name};${gameState.enemy.damage};${gameState.enemy.defense};${gameState.enemy.hp};${gameState.enemy.maxHp};${gameState.enemy.gold};`);
+    (gameState.data.zone % 4 === 0 ? "" : `${gameState.data.enemy.name};${gameState.data.enemy.damage};${gameState.data.enemy.defense};${gameState.data.enemy.hp};${gameState.data.enemy.maxHp};${gameState.data.enemy.gold};`);
   // return JSON.stringify(gameState);
   // return "test";
 }
@@ -82,7 +82,7 @@ function cloneState(state, full = true) {
 }
 
 function displayState(gameState) {
-  return (gameState.won ? "👑" : "💀") + ` Zone ${gameState.zone}, ${gameState.player.damage} 🗡️, ${gameState.player.defense} 🛡️, ${gameState.player.hp}/${gameState.player.maxHp} ❤️, ${gameState.player.gold} 🪙`;
+  return (gameState.meta.won ? "👑" : "💀") + ` Zone ${gameState.data.zone}, ${gameState.player.damage} 🗡️, ${gameState.player.defense} 🛡️, ${gameState.player.hp}/${gameState.player.maxHp} ❤️, ${gameState.player.gold} 🪙`;
 }
 
 
@@ -100,20 +100,20 @@ let unexploredIdx = 0;
 function takeAction(gameState, action, idx) {
   if (action.condition(gameState)) {
     // console.log(`action taken: ${idx} ${action.name}`);
-    gameState.numberPath.push(idx);
+    gameState.meta.numberPath.push(idx);
     // ignore attacks on action path
     // if (action.name !== "Attack") {
-    // gameState.actionPath.push(action.name);
+    // gameState.meta.actionPath.push(action.name);
     // }
     // mark code path for visualisation
     if (action.code) {
-      gameState.codePath.push(action.code);
+      gameState.meta.codePath.push(action.code);
     }
     action.execute(gameState);
 
     // TODO: decide if the state is won or dead and where
-    gameState.won = gameState.zone > lastZone;
-    gameState.dead = gameState.player.hp <= 0;
+    gameState.meta.won = gameState.data.zone > lastZone;
+    gameState.meta.dead = gameState.player.hp <= 0;
   } else {
     console.error(`action invalid ${idx}`);
   }
@@ -129,7 +129,7 @@ function takeActionByNumber(gameState, actions, idx) {
 
 
 function tagRun(gameState) {
-  return "\n " + (gameState.won ? "👑" : "💀") + gameState.codePath.join("") + ` Zone ${gameState.zone}, ${gameState.player.damage} 🗡️, ${gameState.player.defense} 🛡️, ${gameState.player.hp}/${gameState.player.maxHp} ❤️, ${gameState.player.gold} 🪙`;
+  return "\n " + (gameState.meta.won ? "👑" : "💀") + gameState.meta.codePath.join("") + ` Zone ${gameState.data.zone}, ${gameState.player.damage} 🗡️, ${gameState.player.defense} 🛡️, ${gameState.player.hp}/${gameState.player.maxHp} ❤️, ${gameState.player.gold} 🪙`;
 }
 
 
@@ -165,7 +165,7 @@ function getChildStates(gameState) {
 }
 function exploreState(gameState, hashRecord, runStats, flatUnexploredStates) {
   // mark this state as explored
-  // let path = gameState.numberPath.toString();
+  // let path = gameState.meta.numberPath.toString();
   // let storedState = cloneState(gameState, true);
   // exploredStates[path] = storedState;
 
@@ -174,7 +174,7 @@ function exploreState(gameState, hashRecord, runStats, flatUnexploredStates) {
   // mark with hash
   let hash = customHash(minClone);
   // console.log(hash);
-  let bucket = gameState.zone;
+  let bucket = gameState.data.zone;
   if (!hashRecord[bucket]) {
     hashRecord[bucket] = {};
   }
@@ -190,23 +190,23 @@ function exploreState(gameState, hashRecord, runStats, flatUnexploredStates) {
     // }
     return;
   } else {
-    // hashRecord[bucket][hash] = { count: 1, state: minClone, path: gameState.numberPath };
-    hashRecord[bucket][hash] = { count: 1, path: gameState.numberPath };
+    // hashRecord[bucket][hash] = { count: 1, state: minClone, path: gameState.meta.numberPath };
+    hashRecord[bucket][hash] = { count: 1, path: gameState.meta.numberPath };
     runStats.uniqueHashes++;
   }
 
   // record runs
-  if (gameState.won || gameState.dead) {
+  if (gameState.meta.won || gameState.meta.dead) {
 
-    // exploredStatesMin[gameState.numberPath.join("")] = minClone;
-    if (gameState.won) {
+    // exploredStatesMin[gameState.meta.numberPath.join("")] = minClone;
+    if (gameState.meta.won) {
       runStats.won += 1;
     }
-    if (gameState.dead) {
+    if (gameState.meta.dead) {
       runStats.dead += 1;
     }
     // god damn you
-    // insertIntoPriorityQueue(allRuns, { value: cloneState(gameState), priority: scoreState(gameState), won: gameState.won });
+    // insertIntoPriorityQueue(allRuns, { value: cloneState(gameState), priority: scoreState(gameState), won: gameState.meta.won });
   }
 
   let childStates = getChildStates(gameState);
@@ -256,7 +256,7 @@ function shiftUnexploredStates() {
 /////////////////////////////////////////////////////// async explore
 
 function zoneReached() { return getNextUnexploredState().zone; }
-function currentTurn() { return gameState.numberPath.length; }
+function currentTurn() { return gameState.meta.numberPath.length; }
 function upcomingTurn() { return getNextUnexploredState().numberPath.length; }
 function allExplored() { return getRemainingUnexploredStates() === 0; }
 

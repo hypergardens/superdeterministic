@@ -146,13 +146,13 @@ let pregenActions = {
 };
 
 function generateActions(gameState) {
-  if (gameState.dead || gameState.won /* || gameState.zone > lastZone */) {
+  if (gameState.meta.dead || gameState.meta.won /* || gameState.data.zone > lastZone */) {
     return pregenActions["dead"];
-  } else if (gameState.zone === lastZone) {
+  } else if (gameState.data.zone === lastZone) {
     return pregenActions["win"];
-  } else if (gameState.zone % 4 === 0) {
+  } else if (gameState.data.zone % 4 === 0) {
     // return shop actions
-    return pregenActions[gameState.zone];
+    return pregenActions[gameState.data.zone];
   } else {
     // if monster, only attack
     return pregenActions["attack"];

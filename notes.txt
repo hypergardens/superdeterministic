@@ -1,8 +1,7 @@
-long search
------------------------------------
-States/second: 48.97
-1.20 M explored, 681.00 unexplored states.Won: 5.27 k, Dead: 82.19 k
-duplicates: 186.94 k, uniqueHashes: 1.02 M, collision%: 15.55
-Fringe: 725.00
-Explored: 1.20 M
-HashBucket: 55, pool size: 44
+blind random MCTS:
+after 3s
+: 398/227000, 0.18
+
+basic UCB based on child and parent
+after 3009.453099 ms
+: 468/201000, 0.23

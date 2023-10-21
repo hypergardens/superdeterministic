@@ -6,22 +6,19 @@ let actions = {
   "hpPendant": (instanceName = "Health Pendant", amount = 5, cost = 30) => ({
     name: `${instanceName} +${amount} (${cost})`,
     code: amount === 5 ? `h` : `H`,
-    condition: (gameState) => gameState.player.gold >= cost,
+    condition: (gameState) => gameState.data.player.gold >= cost,
     execute: function (gameState) {
-      if (tryBuy(gameState, cost)) {
-        gameState.player.maxHp += amount;
-        gameState.player.hp += amount;
-      }
+      gameState.data.player.maxHp += amount;
+      gameState.data.player.hp += amount;
+
     }
   }),
   "hpPotion": (instanceName = "Potion", amount = 8, cost = 5) => ({
     name: `${instanceName} +${amount} (${cost})`,
     code: amount === 8 ? `p` : `P`,
-    condition: (gameState) => gameState.player.gold >= cost && gameState.player.hp < gameState.player.maxHp,
+    condition: (gameState) => gameState.data.player.gold >= cost && gameState.data.player.hp < gameState.data.player.maxHp,
     execute: (gameState) => {
-      if (gameState.player.hp < gameState.player.maxHp && tryBuy(gameState, cost)) {
-        gameState.player.hp = Math.min(gameState.player.maxHp, gameState.player.hp + amount);
-      }
+      gameState.data.player.hp = Math.min(gameState.data.player.maxHp, gameState.data.player.hp + amount);
     }
   }),
   "takeDamage": (amount) => ({
@@ -33,7 +30,7 @@ let actions = {
     name: `Get Gold ${amount}`,
     condition: (gameState) => true,
     execute: (gameState) => {
-      gameState.player.gold += amount;
+      gameState.data.player.gold += amount;
     }
   }),
   "attack": () => ({
@@ -42,10 +39,10 @@ let actions = {
     // TODO: condition for visibility vs activation
     condition: (gameState) => true,
     execute: (gameState) => {
-      enemyTakeDamage(gameState, gameState.player.damage);
+      enemyTakeDamage(gameState, gameState.data.player.damage);
       // retaliate or die
-      if (gameState.enemy.hp > 0) {
-        playerTakeDamage(gameState, gameState.enemy.damage);
+      if (gameState.data.enemy.hp > 0) {
+        playerTakeDamage(gameState, gameState.data.enemy.damage);
       } else {
         killEnemy(gameState);
       }
@@ -55,11 +52,11 @@ let actions = {
     (name, damage, cost) => ({
       name: `${name} (${cost})`,
       code: `w`,
-      condition: (gameState) => gameState.player.gold >= cost && gameState.player.weaponName !== name,
+      condition: (gameState) => gameState.data.player.gold >= cost && gameState.data.player.weaponName !== name,
       execute: (gameState) => {
-        if (gameState.player.weaponName !== name && tryBuy(gameState, cost)) {
-          gameState.player.damage = damage;
-          gameState.player.weaponName = name;
+        if (gameState.data.player.weaponName !== name && tryBuy(gameState, cost)) {
+          gameState.data.player.damage = damage;
+          gameState.data.player.weaponName = name;
         }
       }
     }),
@@ -67,11 +64,11 @@ let actions = {
     (name, defense, cost) => ({
       name: `${name} (${cost})`,
       code: `a`,
-      condition: (gameState) => gameState.player.gold >= cost && gameState.player.armourName !== name,
+      condition: (gameState) => gameState.data.player.gold >= cost && gameState.data.player.armourName !== name,
       execute: (gameState) => {
-        if (gameState.player.armourName !== name && tryBuy(gameState, cost)) {
-          gameState.player.defense = defense;
-          gameState.player.armourName = name;
+        if (gameState.data.player.armourName !== name && tryBuy(gameState, cost)) {
+          gameState.data.player.defense = defense;
+          gameState.data.player.armourName = name;
         }
       }
     }),
@@ -81,7 +78,7 @@ let actions = {
     // code: `>`,
     condition: (gameState) => true,
     execute: (gameState) => {
-      gameState.zone += 1;
+      gameState.data.zone += 1;
       populateArea(gameState);
     }
   }),
@@ -89,7 +86,7 @@ let actions = {
     name: `Go to ${name}`,
     condition: (gameState) => true,
     execute: (gameState) => {
-      gameState.zone = zone;
+      gameState.data.zone = zone;
     }
   }),
   // TODO: winnable
@@ -98,7 +95,7 @@ let actions = {
     code: `!`,
     condition: (gameState) => true,
     execute: (gameState) => {
-      gameState.zone += 1;
+      gameState.data.zone += 1;
       populateArea(gameState);
     }
   }),

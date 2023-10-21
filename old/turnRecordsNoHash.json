@@ -1,0 +1,112 @@
+{
+  "0": { "explored": 1, "speed": "1306.8", "totalTime": 0.000765235 },
+  "1": { "explored": 3, "speed": "5729.6", "totalTime": 0.0005235999999999999 },
+  "2": {
+    "explored": 5,
+    "speed": "12640.8",
+    "totalTime": 0.00039554499999999997
+  },
+  "3": {
+    "explored": 5,
+    "speed": "21303.8",
+    "totalTime": 0.00023469999999999999
+  },
+  "4": { "explored": 5, "speed": "41664.9", "totalTime": 0.000120005 },
+  "5": {
+    "explored": 5,
+    "speed": "60872.4",
+    "totalTime": 0.00008213900000000001
+  },
+  "6": { "explored": 5, "speed": "72807.8", "totalTime": 0.000068674 },
+  "7": { "explored": 5, "speed": "58078.8", "totalTime": 0.00008609 },
+  "8": { "explored": 5, "speed": "16413.0", "totalTime": 0.000304636 },
+  "9": { "explored": 7, "speed": "41890.8", "totalTime": 0.000167101 },
+  "10": { "explored": 19, "speed": "55839.2", "totalTime": 0.000340263 },
+  "11": { "explored": 27, "speed": "122397.9", "totalTime": 0.000220592 },
+  "12": { "explored": 30, "speed": "81037.5", "totalTime": 0.000370199 },
+  "13": {
+    "explored": 35,
+    "speed": "90973.6",
+    "totalTime": 0.00038472699999999996
+  },
+  "14": { "explored": 39, "speed": "21125.0", "totalTime": 0.001846153 },
+  "15": { "explored": 63, "speed": "210321.8", "totalTime": 0.000299541 },
+  "16": { "explored": 78, "speed": "123801.1", "totalTime": 0.000630043 },
+  "17": { "explored": 97, "speed": "42426.5", "totalTime": 0.002286308 },
+  "18": { "explored": 164, "speed": "175319.5", "totalTime": 0.000935435 },
+  "19": { "explored": 207, "speed": "75320.8", "totalTime": 0.002748244 },
+  "20": { "explored": 194, "speed": "150892.3", "totalTime": 0.001285685 },
+  "21": {
+    "explored": 188,
+    "speed": "209424.1",
+    "totalTime": 0.0008977000000000001
+  },
+  "22": { "explored": 159, "speed": "157790.4", "totalTime": 0.001007666 },
+  "23": {
+    "explored": 151,
+    "speed": "141628.3",
+    "totalTime": 0.0010661709999999999
+  },
+  "24": { "explored": 161, "speed": "161234.3", "totalTime": 0.000998547 },
+  "25": { "explored": 148, "speed": "81619.0", "totalTime": 0.001813304 },
+  "26": { "explored": 122, "speed": "202784.8", "totalTime": 0.000601623 },
+  "27": { "explored": 82, "speed": "124694.9", "totalTime": 0.000657605 },
+  "28": {
+    "explored": 103,
+    "speed": "30520.6",
+    "totalTime": 0.0033747720000000003
+  },
+  "29": { "explored": 169, "speed": "67758.6", "totalTime": 0.002494149 },
+  "30": { "explored": 294, "speed": "210099.2", "totalTime": 0.001399339 },
+  "31": { "explored": 278, "speed": "92662.3", "totalTime": 0.003000142 },
+  "32": { "explored": 258, "speed": "50549.3", "totalTime": 0.005103931 },
+  "33": { "explored": 252, "speed": "55069.4", "totalTime": 0.004576048 },
+  "34": {
+    "explored": 266,
+    "speed": "89104.3",
+    "totalTime": 0.0029852660000000003
+  },
+  "35": { "explored": 338, "speed": "369924.9", "totalTime": 0.000913699 },
+  "36": { "explored": 460, "speed": "295710.2", "totalTime": 0.001555577 },
+  "37": { "explored": 456, "speed": "211094.1", "totalTime": 0.002160174 },
+  "38": { "explored": 582, "speed": "66332.8", "totalTime": 0.008773935 },
+  "39": {
+    "explored": 1350,
+    "speed": "102864.9",
+    "totalTime": 0.013124008999999999
+  },
+  "40": { "explored": 3492, "speed": "79657.3", "totalTime": 0.043837793 },
+  "41": { "explored": 7062, "speed": "138966.8", "totalTime": 0.050817902 },
+  "42": { "explored": 9264, "speed": "188895.4", "totalTime": 0.049043025 },
+  "43": { "explored": 13176, "speed": "210023.0", "totalTime": 0.062735994 },
+  "44": { "explored": 15606, "speed": "107362.4", "totalTime": 0.145358137 },
+  "45": { "explored": 16356, "speed": "164001.0", "totalTime": 0.099731116 },
+  "46": { "explored": 18372, "speed": "173991.9", "totalTime": 0.105591137 },
+  "47": { "explored": 23256, "speed": "111906.7", "totalTime": 0.207815893 },
+  "48": {
+    "explored": 35334,
+    "speed": "133477.0",
+    "totalTime": 0.26471979900000003
+  },
+  "49": { "explored": 72444, "speed": "111292.4", "totalTime": 0.650933672 },
+  "50": {
+    "explored": 130962,
+    "speed": "194983.4",
+    "totalTime": 0.6716570759999999
+  },
+  "51": { "explored": 188640, "speed": "187308.5", "totalTime": 1.007108578 },
+  "52": { "explored": 238176, "speed": "227018.3", "totalTime": 1.049148972 },
+  "53": { "explored": 262902, "speed": "164968.2", "totalTime": 1.593652921 },
+  "54": {
+    "explored": 273792,
+    "speed": "207118.6",
+    "totalTime": 1.3219093530000001
+  },
+  "55": {
+    "explored": 317886,
+    "speed": "150235.0",
+    "totalTime": 2.1159243539999997
+  },
+  "56": { "explored": 438102, "speed": "145528.9", "totalTime": 3.010412657 },
+  "57": { "explored": 732222, "speed": "80228.0", "totalTime": 9.126763942 }
+}

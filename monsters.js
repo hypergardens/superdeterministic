@@ -79,7 +79,7 @@ function populateArea(gameState) {
   // determine what gets placed
   // get a blob
   // TODO: content lists
-  gameState.enemy = monsters[gameState.zone];
+  gameState.data.enemy = monsters[gameState.data.zone];
 }
 
 module.exports = {

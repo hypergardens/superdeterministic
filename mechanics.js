@@ -1,8 +1,8 @@
 let { monsters, populateArea } = require("./monsters");
 
 function tryBuy(gameState, cost) {
-  if (gameState.player.gold >= cost) {
-    gameState.player.gold -= cost;
+  if (gameState.data.player.gold >= cost) {
+    gameState.data.player.gold -= cost;
     return true;
   } else {
     // console.warn("failed to buy");
@@ -11,7 +11,7 @@ function tryBuy(gameState, cost) {
 }
 
 function playerTakeDamage(gameState, damage) {
-  gameState.player.hp -= Math.max(0, damage - gameState.player.defense);;;;;;;;;;;;;
+  gameState.data.player.hp -= Math.max(0, damage - gameState.data.player.defense);;;;;;;;;;;;;
 
   // nothing
   for (let i = 0; i < damage; i++) {
@@ -19,20 +19,20 @@ function playerTakeDamage(gameState, damage) {
   }
 
 
-  if (gameState.player.hp <= 0) {
+  if (gameState.data.player.hp <= 0) {
     // console.warn("DEAD");
   }
 }
 
 function enemyTakeDamage(gameState, damage) {
-  gameState.enemy.hp -= Math.max(0, damage - gameState.enemy.defense);
-  if (gameState.enemy.hp <= 0) {
+  gameState.data.enemy.hp -= Math.max(0, damage - gameState.data.enemy.defense);
+  if (gameState.data.enemy.hp <= 0) {
   }
 }
 
 function killEnemy(gameState) {
-  gameState.player.gold += gameState.enemy.gold;
-  gameState.zone += 1;
+  gameState.data.player.gold += gameState.data.enemy.gold;
+  gameState.data.zone += 1;
   populateArea(gameState);
 }
 
