@@ -263,8 +263,8 @@ function confidence(node, child) {
   let priorScore = Math.sqrt(node.visitCount / (child.visitCount + 1));
   // let exploitation = node.reward / node.visitCount;
   let valueScore = (child.visitCount > 0) ? child.reward / child.visitCount : 0;
-  let exploitConstant = 100;
-  return priorScore + exploitConstant * valueScore;
+  let exploitConstant = 50;
+  return priorScore * child.prior + exploitConstant * valueScore;
 }
 
 class Node {
@@ -275,14 +275,24 @@ class Node {
     this.visitCount = 0;
     this.reward = 0;
   }
-  display() {
-    return `${this.gameState.meta.numberPath.join("")}: ${this.reward}/${this.visitCount}, ${(this.reward / this.visitCount * 100).toFixed(2)}`;
+  display(depth = 0) {
+    return `${" ".repeat(depth)}${this.gameState.meta.codePath.slice(depth - 1).join("")} -> ${format(this.reward)}/${format(this.visitCount)}, ${(this.reward / this.visitCount * 100).toFixed(2)}%`;
   }
-  displayTree() {
-    console.log(this.display());
-    for (let childNode of Object.values(this.children)) {
-      childNode.displayTree();
+  displayTree(depth = 0, maxDepth = 1) {
+    if (depth > maxDepth) {
+      return;
     }
+    // if (this.gameState.meta.codePath[this.gameState.meta.codePath.length - 1] !== "a") {
+    console.log(this.display(depth));
+    // }
+    for (let childNode of Object.values(this.children)) {
+      // if (childNode.reward > 0) {
+      childNode.displayTree(depth + 1, maxDepth);
+      // }
+    }
+  }
+  isTerminal() {
+    return this.gameState.meta.won || this.gameState.meta.dead;
   }
   expand() {
     // console.log(`Expanded: ${this.display()}`);
@@ -300,6 +310,8 @@ class Node {
     let children = Object.values(this.children);
     let totalUCB = children.reduce((acc, child) => (acc + confidence(this, child)), 0);
     let pickIdx = Math.random() * totalUCB;
+    // console.log(this.display());
+    // console.log(`totalUCB ${totalUCB}, pickIdx ${pickIdx}`);
     for (let child of children) {
       pickIdx -= confidence(this, child);
       if (pickIdx <= 0) {
@@ -323,23 +335,23 @@ class Node {
     let won = 0;
     let dead = 0;
     let steps = 0;
-    for (let i = 0; i < simulations; i++) {
-      let tipState = this.gameState;
-      while (!tipState.meta.won && !tipState.meta.dead) {
-        steps += 1;
-        let children = getChildStates(tipState);
-        tipState = children[Math.floor(Math.random() * children.length)];
-      }
-      if (tipState.meta.won) {
-        won += 1;
-      }
-      if (tipState.meta.dead) {
-        dead += 1;
-      }
+    // for (let i = 0; i < simulations; i++) {
+    let tipState = this.gameState;
+    while (!tipState.meta.won && !tipState.meta.dead) {
+      steps += 1;
+      let children = getChildStates(tipState);
+      tipState = children[Math.floor(Math.random() * children.length)];
     }
+    if (tipState.meta.won) {
+      won += 1;
+    }
+    if (tipState.meta.dead) {
+      dead += 1;
+    }
+    // }
     // console.log(`won: ${won}, dead: ${dead}, steps ${steps / simulations}`);
     // console.log(`won%: ${won / dead}`);
-    return won / simulations;
+    return won;
   }
 }
 
@@ -350,7 +362,7 @@ function runSim(gameState) {
 
   let startTime = process.hrtime();
   let elapsed = 0;
-  while (elapsed < 60000) {
+  while (elapsed < 5000) {
     for (let i = 0; i < 1000; i++) {
 
       let node = rootNode;
@@ -378,10 +390,12 @@ function runSim(gameState) {
 
     let endTime = process.hrtime(startTime);
     elapsed = (endTime[0] * 1e3 + endTime[1] / 1e6);
+    console.log("------------------------------------");
     console.log(`after ${elapsed} ms`);
-    console.log(rootNode.display());
+    // console.log(rootNode.display());
+    rootNode.displayTree(0, 1);
+    // console.log(rootNode.displayTree(0, 10));
   }
-  // console.log(rootNode.displayTree());
 }
 
 ////////////////////////////// MCTS

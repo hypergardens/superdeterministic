@@ -35,7 +35,7 @@ let actions = {
   }),
   "attack": () => ({
     name: "Attack",
-    // code: `-`,
+    code: `a`,
     // TODO: condition for visibility vs activation
     condition: (gameState) => true,
     execute: (gameState) => {
