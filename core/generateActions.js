@@ -1,6 +1,7 @@
 
 let { lastZone } = require("./gameData");
 let { actions } = require("./actions");
+const { isWon, isLost } = require("./info");
 
 let pregenActions = {
   "attack": [actions.attack()],
@@ -146,7 +147,7 @@ let pregenActions = {
 };
 
 function generateActions(gameState) {
-  if (gameState.meta.dead || gameState.meta.won /* || gameState.data.zone > lastZone */) {
+  if (isWon(gameState) || isLost(gameState)) {
     return pregenActions["dead"];
   } else if (gameState.data.zone === lastZone) {
     return pregenActions["win"];

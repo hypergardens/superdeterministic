@@ -5,3 +5,22 @@ after 3s
 basic UCB based on child and parent
 after 3009.453099 ms
 : 468/201000, 0.23
+
+---------------------------
+
+Pure random MCTS
+
+after 5013.208346 ms
+ -> 348.00/178.00 k, 0.20%
+ w -> 171.00/59.19 k, 0.29%
+ a -> 177.00/59.30 k, 0.30%
+ - -> 0.00/59.52 k, 0.00%
+simulation: 5.015s
+{
+  uniqDead: 3889,
+  uniqWon: 336,
+  dupeDead: 173763,
+  dupeWon: 12,
+  uniqueHashes: 4225,
+  dupeHashes: 173775
+}

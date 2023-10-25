@@ -23,15 +23,22 @@
 - profiler says shiftUnexplored take most time. optimise it.
 - store non-upcoming pool
 - idea: store sequence of actions to reach a state, recalculate states instead of storing - inefficient
-
-----
-
 - split data into uniq and aux
 - monte carlo simulation
 - test and adjust simulation
+- modular structure, imports
+- registering explored or final states
+
+----
+
+- metrics for a good exploration - clustering? density of solutions?
+- alternatives to Monte Carlo - needle in haystack problems, high branching
+- check overlapping of states and length
+- visualising space
+- pachinko-space, propagating from overlaps
 - both for seeDeeply
 - sigmoid function for variables
-- state flattener?
+- state flattener
 - policy vs value networks
 - data mining the simulations
 - tree -> attrs -> stateData -> parents, children, values, dead, won, evaluated ; references to objects in the tree
